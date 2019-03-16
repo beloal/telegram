@@ -23,9 +23,22 @@ fileprivate struct ChartData: IChartData {
 }
 
 fileprivate struct ChartLine: IChartLine {
+  init(values: [Int], name: String, color: UIColor) {
+    self.values = values
+    self.name = name
+    self.color = color
+    for val in values {
+//      if val < minY { minY = val }
+      if val > maxY { maxY = val }
+    }
+    minY = 0
+  }
+
   var values: [Int]
   var name: String
   var color: UIColor
+  var minY: Int = Int.max
+  var maxY: Int = Int.min
 }
 
 fileprivate struct Column {

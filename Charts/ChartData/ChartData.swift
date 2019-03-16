@@ -9,4 +9,6 @@ protocol IChartLine {
   var values: [Int] { get }
   var name: String { get }
   var color: UIColor { get }
+  var minY: Int { get }
+  var maxY: Int { get }
 }
