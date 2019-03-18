@@ -1,19 +1,13 @@
-//
-//  ChartLineView.swift
-//  Charts
-//
-//  Created by aleksey.belousov on 16/03/2019.
-//  Copyright © 2019 aleksey.belousov. All rights reserved.
-//
-
 import UIKit
+
+fileprivate let kAnimationDuration = UIApplication.shared.statusBarOrientationAnimationDuration
 
 extension IChartLine {
   func makePath() -> UIBezierPath {
     let path = UIBezierPath()
     for i in 0..<values.count {
       let x = CGFloat(i)
-      let y = CGFloat(maxY - values[i])
+      let y = CGFloat(values[i] - minY)
       if i == 0 {
         path.move(to: CGPoint(x: x, y: y))
       } else {
@@ -26,38 +20,69 @@ extension IChartLine {
 }
 
 class ChartLineView: UIView {
-  var chartLine: IChartLine? {
+  override class var layerClass: AnyClass { return CAShapeLayer.self }
+
+  private var minX = 0
+  private var maxX = 1
+  private var minY = 0
+  private var maxY = 1
+  private var path: UIBezierPath?
+
+  var chartLine: IChartLine! {
     didSet {
       guard let chartLine = chartLine else { return }
-      xRange = 0..<chartLine.values.count - 1
-      yRange = chartLine.minY..<chartLine.maxY
+      maxX = chartLine.values.count - 1
+      minY = chartLine.minY
+      maxY = chartLine.maxY
       path = chartLine.makePath()
       let sl = layer as! CAShapeLayer
       sl.strokeColor = chartLine.color.cgColor
       sl.fillColor = UIColor.clear.cgColor
-      setNeedsLayout()
+      sl.miterLimit = 0
+      updateGraph()
     }
   }
 
-  var xRange: Range = 0..<1
-  var yRange: Range = 0..<1
-  var path: UIBezierPath?
+  func setX(min: Int, max: Int, animated: Bool = false) {
+    assert(min < max)
+    minX = min
+    maxX = max
+    updateGraph(animationDuration: animated ? kAnimationDuration : 0)
+  }
 
-  override class var layerClass: AnyClass { return CAShapeLayer.self }
+  func setY(min: Int, max: Int, animated: Bool = false) {
+    assert(min < max)
+    minY = min
+    maxY = max
+    updateGraph(animationDuration: animated ? kAnimationDuration : 0)
+  }
+
+  private func updateGraph(animationDuration: TimeInterval = 0) {
+    let xScale = bounds.width / CGFloat(maxX - minX)
+    let xTranslate = -bounds.width * CGFloat(minX) / CGFloat(maxX - minX) //CGFloat(0)
+    let yScale = (bounds.height - 1) / CGFloat(maxY - minY)
+    let yTranslate = (bounds.height - 1) * CGFloat(chartLine.minY - minY) / CGFloat(maxY - minY) + 0.5
+
+    guard let realPath = path?.copy() as? UIBezierPath else { return }
+    let scale = CGAffineTransform.identity.scaledBy(x: xScale, y: yScale)
+    let translate = CGAffineTransform.identity.translatedBy(x: xTranslate, y: yTranslate)
+    let transform = scale.concatenating(translate)
+    realPath.apply(transform)
+
+    let sl = layer as! CAShapeLayer
+    if animationDuration > 0 {
+      let animation = CABasicAnimation(keyPath: "path")
+      animation.duration = animationDuration
+      animation.fromValue = sl.path
+      animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+      layer.add(animation, forKey: "path")
+    }
+
+    sl.path = realPath.cgPath
+  }
 
   override func layoutSubviews() {
     super.layoutSubviews()
-
-    let xScale = bounds.width / CGFloat(xRange.upperBound)
-    let xTranslate = CGFloat(0)
-    let yScale = bounds.height / CGFloat(yRange.upperBound - yRange.lowerBound)
-    let yTranslate = CGFloat(0)
-
-    let sl = layer as! CAShapeLayer
-    guard let realPath = path?.copy() as? UIBezierPath else { return }
-    let transform = CGAffineTransform.identity.scaledBy(x: xScale, y: yScale)
-      .translatedBy(x: xTranslate, y: yTranslate)
-    realPath.apply(transform)
-    sl.path = realPath.cgPath
+    updateGraph(animationDuration: UIView.inheritedAnimationDuration)
   }
 }

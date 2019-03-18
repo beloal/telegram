@@ -28,10 +28,9 @@ fileprivate struct ChartLine: IChartLine {
     self.name = name
     self.color = color
     for val in values {
-//      if val < minY { minY = val }
+      if val < minY { minY = val }
       if val > maxY { maxY = val }
     }
-    minY = 0
   }
 
   var values: [Int]
