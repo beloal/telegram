@@ -28,6 +28,13 @@ class ChartLineView: UIView {
   private var maxY = 1
   private var path: UIBezierPath?
 
+  var lineWidth: CGFloat = 1 {
+    didSet {
+      let sl = layer as! CAShapeLayer
+      sl.lineWidth = lineWidth
+    }
+  }
+
   var chartLine: IChartLine! {
     didSet {
       guard let chartLine = chartLine else { return }
@@ -38,9 +45,18 @@ class ChartLineView: UIView {
       let sl = layer as! CAShapeLayer
       sl.strokeColor = chartLine.color.cgColor
       sl.fillColor = UIColor.clear.cgColor
-      sl.miterLimit = 0
+      sl.lineWidth = lineWidth
       updateGraph()
     }
+  }
+
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+    transform = CGAffineTransform.identity.scaledBy(x: 1, y: -1)
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
   }
 
   func setX(min: Int, max: Int, animated: Bool = false) {
@@ -58,12 +74,12 @@ class ChartLineView: UIView {
   }
 
   private func updateGraph(animationDuration: TimeInterval = 0) {
+    guard let realPath = path?.copy() as? UIBezierPath else { return }
+
     let xScale = bounds.width / CGFloat(maxX - minX)
-    let xTranslate = -bounds.width * CGFloat(minX) / CGFloat(maxX - minX) //CGFloat(0)
+    let xTranslate = -bounds.width * CGFloat(minX) / CGFloat(maxX - minX)
     let yScale = (bounds.height - 1) / CGFloat(maxY - minY)
     let yTranslate = (bounds.height - 1) * CGFloat(chartLine.minY - minY) / CGFloat(maxY - minY) + 0.5
-
-    guard let realPath = path?.copy() as? UIBezierPath else { return }
     let scale = CGAffineTransform.identity.scaledBy(x: xScale, y: yScale)
     let translate = CGAffineTransform.identity.translatedBy(x: xTranslate, y: yTranslate)
     let transform = scale.concatenating(translate)

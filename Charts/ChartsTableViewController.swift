@@ -7,7 +7,6 @@ class ChartsTableViewController: UITableViewController {
     super.viewDidLoad()
     assert(data != nil)
 
-    title = "Charts"
     tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
   }
 
