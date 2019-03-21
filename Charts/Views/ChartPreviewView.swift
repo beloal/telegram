@@ -7,11 +7,21 @@ protocol ChartPreviewViewDelegate: AnyObject {
 class ChartPreviewView: UIView {
   let previewContainerView = UIView()
   let viewPortView = UIView()
+  let leftBoundView = UIView()
+  let rightBoundView = UIView()
   var previewViews: [ChartLineView] = []
 
   var minX = 0
   var maxX = 0
   weak var delegate: ChartPreviewViewDelegate?
+
+  override var frame: CGRect {
+    didSet {
+      if chartData != nil {
+        updateViewPort()
+      }
+    }
+  }
 
   var chartData: IChartData! {
     didSet {
@@ -21,9 +31,7 @@ class ChartPreviewView: UIView {
         minY = min(line.minY, minY)
         maxY = max(line.maxY, maxY)
         let v = ChartLineView()
-        v.isUserInteractionEnabled = false
         v.chartLine = line
-        v.lineWidth = 1
         previewViews.append(v)
         v.frame = previewContainerView.bounds
         v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -31,21 +39,43 @@ class ChartPreviewView: UIView {
       }
       previewViews.forEach { $0.setY(min: minY, max: maxY) }
       let count = chartData.xAxis.count - 1
-      setX(min: 0, max: count / 5)
+      setX(min: count - count / 5, max: count)
     }
   }
 
   override init(frame: CGRect) {
     super.init(frame: frame)
-    previewContainerView.frame = bounds
-    previewContainerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    previewContainerView.translatesAutoresizingMaskIntoConstraints = false
     addSubview(previewContainerView)
+    let t = previewContainerView.topAnchor.constraint(equalTo: topAnchor)
+    let b = previewContainerView.bottomAnchor.constraint(equalTo: bottomAnchor)
+    t.priority = .defaultHigh
+    b.priority = .defaultHigh
+    t.constant = 3
+    b.constant = -3
+    NSLayoutConstraint.activate([
+      previewContainerView.leftAnchor.constraint(equalTo: leftAnchor),
+      previewContainerView.rightAnchor.constraint(equalTo: rightAnchor),
+      t,
+      b])
 
-    viewPortView.backgroundColor = UIColor(white: 0.5, alpha: 0.5)
+    viewPortView.backgroundColor = UIColor(white: 0, alpha: 0.05)
+    viewPortView.clipsToBounds = true
+    viewPortView.translatesAutoresizingMaskIntoConstraints = false
     addSubview(viewPortView)
+
+    leftBoundView.backgroundColor = UIColor(white: 0, alpha: 0.2)
+    rightBoundView.backgroundColor = UIColor(white: 0, alpha: 0.2)
+    viewPortView.addSubview(leftBoundView)
+    viewPortView.addSubview(rightBoundView)
 
     let pan = UIPanGestureRecognizer(target: self, action: #selector(onPan(_:)))
     viewPortView.addGestureRecognizer(pan)
+
+    let leftPan = UIPanGestureRecognizer(target: self, action: #selector(onLeftPan(_:)))
+    let rightPan = UIPanGestureRecognizer(target: self, action: #selector(onRightPan(_:)))
+    leftBoundView.addGestureRecognizer(leftPan)
+    rightBoundView.addGestureRecognizer(rightPan)
   }
 
   @objc func onPan(_ sender: UIPanGestureRecognizer) {
@@ -53,20 +83,58 @@ class ChartPreviewView: UIView {
       let p = sender.translation(in: viewPortView)
       let count = chartData.xAxis.count - 1
       let x = Int((viewPortView.frame.minX + p.x) / bounds.width * CGFloat(count))
-//      print("\(x) \(p)")
       let dx = maxX - minX
       let mx = x + dx
-      if x >= 0 && mx <= count {
+
+      if x > 0 && mx < count {
         viewPortView.frame = viewPortView.frame.offsetBy(dx: p.x, dy: 0)
         sender.setTranslation(CGPoint(x: 0, y: 0), in: viewPortView)
         minX = x
         maxX = mx
         delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
-      } else if minX > 0 && x < 0 {
+      } else if minX > 0 && x <= 0 {
         setX(min: 0, max: dx)
-      } else if maxX < count && mx > count {
+      } else if maxX < count && mx >= count {
         setX(min: count - dx, max: count)
       }
+    }
+  }
+
+  @objc func onLeftPan(_ sender: UIPanGestureRecognizer) {
+    if sender.state == .changed {
+      let p = sender.translation(in: leftBoundView)
+      let count = chartData.xAxis.count - 1
+      let x = Int((viewPortView.frame.minX + p.x) / bounds.width * CGFloat(count))
+
+      if x > 0 && x < maxX && maxX - x >= count / 10 {
+        var f = viewPortView.frame
+        f = CGRect(x: f.minX + p.x, y: f.minY, width: f.width - p.x, height: f.height)
+        minX = x
+        viewPortView.frame = f
+        rightBoundView.frame = CGRect(x: viewPortView.bounds.width - 14, y: 0, width: 44, height: viewPortView.bounds.height)
+        sender.setTranslation(CGPoint(x: 0, y: 0), in: leftBoundView)
+        delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
+      } else if x <= 0 && minX > 0 {
+        setX(min: 0, max: maxX)
+      }
+    }
+  }
+
+  @objc func onRightPan(_ sender: UIPanGestureRecognizer) {
+    let p = sender.translation(in: viewPortView)
+    let count = chartData.xAxis.count - 1
+    let mx = Int((viewPortView.frame.maxX + p.x) / bounds.width * CGFloat(count))
+
+    if mx > minX && mx < count && mx - minX >= count / 10 {
+      var f = viewPortView.frame
+      f = CGRect(x: f.minX, y: f.minY, width: f.width + p.x, height: f.height)
+      maxX = mx
+      viewPortView.frame = f
+      rightBoundView.frame = CGRect(x: viewPortView.bounds.width - 14, y: 0, width: 44, height: viewPortView.bounds.height)
+      sender.setTranslation(CGPoint(x: 0, y: 0), in: leftBoundView)
+      delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
+    } else if mx >= count && maxX < count {
+      setX(min: minX, max: count)
     }
   }
 
@@ -84,14 +152,11 @@ class ChartPreviewView: UIView {
                                 y: bounds.minY,
                                 width: CGFloat(maxX - minX) / count * bounds.width,
                                 height: bounds.height)
+    leftBoundView.frame = CGRect(x: -30, y: 0, width: 44, height: viewPortView.bounds.height)
+    rightBoundView.frame = CGRect(x: viewPortView.bounds.width - 14, y: 0, width: 44, height: viewPortView.bounds.height)
   }
 
   required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
-  }
-
-  override func layoutSubviews() {
-    super.layoutSubviews()
-    updateViewPort()
   }
 }

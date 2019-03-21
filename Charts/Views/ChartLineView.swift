@@ -53,6 +53,7 @@ class ChartLineView: UIView {
   override init(frame: CGRect) {
     super.init(frame: frame)
     transform = CGAffineTransform.identity.scaledBy(x: 1, y: -1)
+    isUserInteractionEnabled = false
   }
 
   required init?(coder aDecoder: NSCoder) {

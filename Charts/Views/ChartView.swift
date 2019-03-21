@@ -13,7 +13,6 @@ class ChartView: UIView {
         minY = min(line.minY, minY)
         maxY = max(line.maxY, maxY)
         let v = ChartLineView()
-        v.isUserInteractionEnabled = false
         v.chartLine = line
         v.lineWidth = 2
         lineViews.append(v)
@@ -24,22 +23,6 @@ class ChartView: UIView {
 
       lineViews.forEach { $0.setY(min: minY, max: maxY) }
       chartPreviewView.chartData = chartData
-
-//      DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-//        self?.lineViews.forEach {
-//          $0.setX(min: $0.chartLine.values.count / 2,
-//                  max: $0.chartLine.values.count - 1,
-//                  animated: true)
-//        }
-//      }
-//
-//      DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
-//        self?.lineViews.forEach {
-//          $0.setX(min: $0.chartLine.values.count / 2,
-//                  max: $0.chartLine.values.count - 20,
-//                  animated: true)
-//        }
-//      }
     }
   }
 
@@ -56,7 +39,7 @@ class ChartView: UIView {
   private func setup() {
     addSubview(chartsContainerView)
     chartsContainerView.backgroundColor = UIColor(white: 0.95, alpha: 1)
-//    chartsContainerView.clipsToBounds = true
+    chartsContainerView.clipsToBounds = true
 
     addSubview(chartPreviewView)
     chartPreviewView.delegate = self
