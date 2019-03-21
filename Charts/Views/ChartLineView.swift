@@ -1,6 +1,6 @@
 import UIKit
 
-fileprivate let kAnimationDuration = UIApplication.shared.statusBarOrientationAnimationDuration
+fileprivate let kAnimationDuration = 0.1
 
 extension IChartLine {
   func makePath() -> UIBezierPath {
@@ -14,7 +14,6 @@ extension IChartLine {
         path.addLine(to: CGPoint(x: x, y: y))
       }
     }
-
     return path
   }
 }
@@ -23,9 +22,9 @@ class ChartLineView: UIView {
   override class var layerClass: AnyClass { return CAShapeLayer.self }
 
   private var minX = 0
-  private var maxX = 1
+  private var maxX = 0
   private var minY = 0
-  private var maxY = 1
+  private var maxY = 0
   private var path: UIBezierPath?
 
   var lineWidth: CGFloat = 1 {
@@ -88,10 +87,19 @@ class ChartLineView: UIView {
 
     let sl = layer as! CAShapeLayer
     if animationDuration > 0 {
+      var timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+      if sl.animationKeys()?.contains("path") ?? false,
+        let presentation = sl.presentation(),
+        let path = presentation.path {
+        sl.removeAnimation(forKey: "path")
+        sl.path = path
+        timingFunction = CAMediaTimingFunction(name: .linear)
+      }
+
       let animation = CABasicAnimation(keyPath: "path")
       animation.duration = animationDuration
       animation.fromValue = sl.path
-      animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+      animation.timingFunction = timingFunction
       layer.add(animation, forKey: "path")
     }
 

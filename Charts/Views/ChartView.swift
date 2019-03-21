@@ -5,13 +5,16 @@ class ChartView: UIView {
   let chartPreviewView = ChartPreviewView()
   var lineViews: [ChartLineView] = []
 
+  var lowerBound = 0
+  var upperBound = 0
+
   var chartData: IChartData! {
     didSet {
-      var minY = Int.max
-      var maxY = Int.min
+      var lower = Int.max
+      var upper = Int.min
       for line in chartData.lines {
-        minY = min(line.minY, minY)
-        maxY = max(line.maxY, maxY)
+        lower = min(line.minY, lower)
+        upper = max(line.maxY, upper)
         let v = ChartLineView()
         v.chartLine = line
         v.lineWidth = 2
@@ -21,7 +24,9 @@ class ChartView: UIView {
         chartsContainerView.addSubview(v)
       }
 
-      lineViews.forEach { $0.setY(min: minY, max: maxY) }
+      lowerBound = lower
+      upperBound = upper
+      lineViews.forEach { $0.setY(min: lower, max: upper) }
       chartPreviewView.chartData = chartData
     }
   }
@@ -57,6 +62,12 @@ class ChartView: UIView {
 
 extension ChartView: ChartPreviewViewDelegate {
   func chartPreviewView(_ view: ChartPreviewView, didChangeMinX minX: Int, maxX: Int) {
-    lineViews.forEach { $0.setX(min: minX, max: maxX) }
+    var upper = Int.min
+    chartData.lines.forEach {
+      let subrange = $0.values[minX..<maxX]
+      subrange.forEach { upper = max($0, upper) }
+    }
+    lineViews.forEach { $0.setX(min: minX, max: maxX, animated: true) }
+    lineViews.forEach { $0.setY(min: lowerBound, max: upper, animated: true)}
   }
 }

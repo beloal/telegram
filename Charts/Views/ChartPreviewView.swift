@@ -89,9 +89,11 @@ class ChartPreviewView: UIView {
       if x > 0 && mx < count {
         viewPortView.frame = viewPortView.frame.offsetBy(dx: p.x, dy: 0)
         sender.setTranslation(CGPoint(x: 0, y: 0), in: viewPortView)
-        minX = x
-        maxX = mx
-        delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
+        if x != minX {
+          minX = x
+          maxX = mx
+          delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
+        }
       } else if minX > 0 && x <= 0 {
         setX(min: 0, max: dx)
       } else if maxX < count && mx >= count {
@@ -109,11 +111,13 @@ class ChartPreviewView: UIView {
       if x > 0 && x < maxX && maxX - x >= count / 10 {
         var f = viewPortView.frame
         f = CGRect(x: f.minX + p.x, y: f.minY, width: f.width - p.x, height: f.height)
-        minX = x
         viewPortView.frame = f
         rightBoundView.frame = CGRect(x: viewPortView.bounds.width - 14, y: 0, width: 44, height: viewPortView.bounds.height)
         sender.setTranslation(CGPoint(x: 0, y: 0), in: leftBoundView)
-        delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
+        if x != minX {
+          minX = x
+          delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
+        }
       } else if x <= 0 && minX > 0 {
         setX(min: 0, max: maxX)
       }
@@ -128,11 +132,13 @@ class ChartPreviewView: UIView {
     if mx > minX && mx < count && mx - minX >= count / 10 {
       var f = viewPortView.frame
       f = CGRect(x: f.minX, y: f.minY, width: f.width + p.x, height: f.height)
-      maxX = mx
       viewPortView.frame = f
       rightBoundView.frame = CGRect(x: viewPortView.bounds.width - 14, y: 0, width: 44, height: viewPortView.bounds.height)
       sender.setTranslation(CGPoint(x: 0, y: 0), in: leftBoundView)
-      delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
+      if mx != maxX {
+        maxX = mx
+        delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
+      }
     } else if mx >= count && maxX < count {
       setX(min: minX, max: count)
     }
