@@ -9,6 +9,8 @@ class ChartPreviewView: UIView {
   let viewPortView = UIView()
   let leftBoundView = UIView()
   let rightBoundView = UIView()
+  let leftTintView = UIView()
+  let rightTintView = UIView()
   var previewViews: [ChartLineView] = []
   var linesVisibility: [Bool] = []
 
@@ -45,7 +47,7 @@ class ChartPreviewView: UIView {
     }
   }
 
-  func setLineVisisble(_ visible: Bool, atIndex index: Int) {
+  func setLineVisible(_ visible: Bool, atIndex index: Int) {
     guard linesVisibility[index] != visible else { return }
     linesVisibility[index] = visible
     var minY = Int.max

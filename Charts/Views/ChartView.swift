@@ -7,6 +7,7 @@ class ChartView: UIView {
   let chartPreviewView = ChartPreviewView()
   let yAxisView = ChartYAxisView()
   let xAxisView = ChartXAxisView()
+  let chartInfoView = ChartInfoView()
   var lineViews: [ChartLineView] = []
 
   var lowerBound = 0
@@ -36,6 +37,11 @@ class ChartView: UIView {
         v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         chartsContainerView.addSubview(v)
       }
+
+      chartInfoView.frame = chartsContainerView.bounds
+      chartInfoView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+      chartInfoView.delegate = self
+      chartsContainerView.addSubview(chartInfoView)
 
       let step = (upper - lower) / 6 + 1
       upper = lower + step * 6
@@ -87,9 +93,16 @@ class ChartView: UIView {
     chartPreviewView.frame = previewFrame
   }
 
-  func setLineVisisble(_ visible: Bool, atIndex index: Int) {
+  func setLineVisible(_ visible: Bool, atIndex index: Int) {
     assert(index < linesVisibility.count)
     guard visible != linesVisibility[index] else { return }
+
+    if !visible {
+      let visibleCount = linesVisibility.reduce(into: 0) { (r, b) in
+        if b { r += 1 }
+      }
+      if visibleCount == 1  { return }
+    }
 
     linesVisibility[index] = visible
     var lower = Int.max
@@ -101,7 +114,7 @@ class ChartView: UIView {
     }
 
     lowerBound = lower
-    chartPreviewView.setLineVisisble(visible, atIndex: index)
+    chartPreviewView.setLineVisible(visible, atIndex: index)
     chartPreviewView(chartPreviewView, didChangeMinX: xAxisView.lowerBound, maxX: xAxisView.upperBound)
 
     let lv = lineViews[index]
@@ -137,4 +150,30 @@ extension ChartView: ChartPreviewViewDelegate {
     lineViews.forEach { $0.setX(min: minX, max: maxX, animated: true) }
     lineViews.forEach { $0.setY(min: lowerBound, max: upper, animated: true)}
   }
+}
+
+extension ChartView: ChartInfoViewDelegate {
+  func chartInfoView(_ view: ChartInfoView, infoAtPointX pointX: CGFloat) -> (Date, [ChartLineInfo])? {
+    let p = convert(CGPoint(x: pointX, y: 0), from: view)
+    let x = Int(round((p.x / bounds.width) * CGFloat(xAxisView.upperBound - xAxisView.lowerBound))) + xAxisView.lowerBound
+    let px = CGFloat(x - xAxisView.lowerBound) / CGFloat(xAxisView.upperBound - xAxisView.lowerBound) * bounds.width
+    guard x < chartData.xAxis.count && x >= 0 else { return nil }
+    let date = chartData.xAxis[x]
+
+    var result: [ChartLineInfo] = []
+    for i in 0..<chartData.lines.count {
+      guard linesVisibility[i] else { continue }
+      let line = chartData.lines[i]
+      let y = line.values[x]
+      let py = chartsContainerView.bounds.height * CGFloat(y - yAxisView.lowerBound) / CGFloat(yAxisView.upperBound - yAxisView.lowerBound)
+      result.append(ChartLineInfo(name: line.name,
+                                  color: line.color,
+                                  point: convert(CGPoint(x: px, y: py), to: view),
+                                  value: line.values[x]))
+    }
+
+    return (date, result)
+  }
+
+
 }

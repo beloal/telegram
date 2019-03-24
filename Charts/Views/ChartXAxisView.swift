@@ -1,6 +1,7 @@
 import UIKit
 
 fileprivate class ChartXAxisInnerView: UIView {
+  private let font = UIFont.systemFont(ofSize: 12, weight: .regular)
   var lowerBound = 0
   var upperBound = 0
   var steps: [String] = []
@@ -16,7 +17,7 @@ fileprivate class ChartXAxisInnerView: UIView {
 
   func makeLabel(text: String) -> UILabel {
     let label = UILabel()
-    label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+    label.font = font
     label.textColor = UIColor(white: 0, alpha: 0.3)
     label.text = text
     label.sizeToFit()
