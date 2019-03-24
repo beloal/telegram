@@ -53,7 +53,8 @@ fileprivate class ChartYAxisInnerView: UIView {
     updateGrid()
   }
 
-  func updateUpperBound(_ upper: Int) {
+  func updateBounds(lower:Int, upper: Int) {
+    lowerBound = lower
     upperBound = upper
     updateGrid(animationDuration: kAnimationDuration)
   }
@@ -128,8 +129,8 @@ class ChartYAxisView: UIView {
     if let gridView = gridView {
       gv.setBounds(lower: lowerBound, upper: upperBound, steps: steps)
       gv.alpha = 0
-      gv.updateUpperBound(upper)
-      gridView.updateUpperBound(upper)
+      gv.updateBounds(lower: lower, upper:upper)
+      gridView.updateBounds(lower: lower, upper:upper)
       UIView.animate(withDuration: kAnimationDuration, animations: {
         gv.alpha = 1
         gridView.alpha = 0

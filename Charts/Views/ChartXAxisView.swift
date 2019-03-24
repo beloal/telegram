@@ -1,7 +1,6 @@
 import UIKit
 
 fileprivate class ChartXAxisInnerView: UIView {
-
   var lowerBound = 0
   var upperBound = 0
   var steps: [String] = []
@@ -55,6 +54,8 @@ fileprivate class ChartXAxisInnerView: UIView {
 
 class ChartXAxisView: UIView {
   let formatter = DateFormatter()
+  var lowerBound = 0
+  var upperBound = 0
 
   var labels: [String] = []
   var values: [Date] = [] {
@@ -71,10 +72,12 @@ class ChartXAxisView: UIView {
   }
 
   required init?(coder aDecoder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
+    fatalError()
   }
 
   func setBounds(lower: Int, upper: Int) {
+    lowerBound = lower
+    upperBound = upper
     let step = CGFloat(upper - lower) / 5
 
     var steps: [String] = []

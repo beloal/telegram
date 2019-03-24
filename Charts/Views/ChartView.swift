@@ -12,6 +12,8 @@ class ChartView: UIView {
   var lowerBound = 0
   var upperBound = 0
 
+  private(set) var linesVisibility: [Bool] = []
+
   var chartData: IChartData! {
     didSet {
       yAxisView.frame = chartsContainerView.bounds
@@ -19,6 +21,8 @@ class ChartView: UIView {
       yAxisView.transform = CGAffineTransform.identity.scaledBy(x: 1, y: -1)
       chartsContainerView.addSubview(yAxisView)
       
+      linesVisibility = Array(repeating: true, count: chartData.lines.count)
+
       var lower = Int.max
       var upper = Int.min
       for line in chartData.lines {
@@ -69,7 +73,6 @@ class ChartView: UIView {
     chartPreviewView.delegate = self
 
     addSubview(xAxisView)
-//    xAxisView.backgroundColor = UIColor.yellow
   }
 
   override func layoutSubviews() {
@@ -83,13 +86,39 @@ class ChartView: UIView {
     let previewFrame = CGRect(x: bounds.minX, y: bounds.height - 44, width: bounds.width, height: 44)
     chartPreviewView.frame = previewFrame
   }
+
+  func setLineVisisble(_ visible: Bool, atIndex index: Int) {
+    assert(index < linesVisibility.count)
+    guard visible != linesVisibility[index] else { return }
+
+    linesVisibility[index] = visible
+    var lower = Int.max
+
+    for i in 0..<chartData.lines.count {
+      guard linesVisibility[i] else { continue }
+      let line = chartData.lines[i]
+      lower = min(line.minY, lower)
+    }
+
+    lowerBound = lower
+    chartPreviewView.setLineVisisble(visible, atIndex: index)
+    chartPreviewView(chartPreviewView, didChangeMinX: xAxisView.lowerBound, maxX: xAxisView.upperBound)
+
+    let lv = lineViews[index]
+    UIView.animate(withDuration: kAnimationDuration) {
+      lv.alpha = visible ? 1 : 0
+    }
+  }
 }
 
 extension ChartView: ChartPreviewViewDelegate {
   func chartPreviewView(_ view: ChartPreviewView, didChangeMinX minX: Int, maxX: Int) {
     var upper = Int.min
-    chartData.lines.forEach {
-      let subrange = $0.values[minX..<maxX]
+
+    for i in 0..<chartData.lines.count {
+      guard linesVisibility[i] else { continue }
+      let line = chartData.lines[i]
+      let subrange = line.values[minX..<maxX]
       subrange.forEach { upper = max($0, upper) }
     }
 

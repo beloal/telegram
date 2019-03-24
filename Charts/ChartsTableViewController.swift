@@ -5,8 +5,20 @@ class ChartsTableViewController: UITableViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    assert(data != nil)
 
+    guard let fileUrl = Bundle.main.url(forResource: "chart_data", withExtension: "json") else {
+      assertionFailure("File not found")
+      return
+    }
+
+    guard let data = try? Data(contentsOf: fileUrl) else {
+      assertionFailure("Can't read file")
+      return
+    }
+
+    let parser: IChartDataParser = ChartDataJsonParser()
+    guard let chartData = parser.parseData(data) else { return }
+    self.data = chartData
     tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
   }
 
@@ -30,7 +42,7 @@ class ChartsTableViewController: UITableViewController {
 
   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     let chartData = data[indexPath.row]
-    let vc = ChartViewController()
+    let vc = ChartTableViewController(style: .grouped)
     vc.chartData = chartData
     navigationController?.pushViewController(vc, animated: true)
   }

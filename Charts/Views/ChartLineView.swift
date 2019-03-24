@@ -54,7 +54,7 @@ class ChartLineView: UIView {
   }
 
   required init?(coder aDecoder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
+    fatalError()
   }
 
   func setX(min: Int, max: Int, animated: Bool = false) {

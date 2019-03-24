@@ -10,6 +10,7 @@ class ChartPreviewView: UIView {
   let leftBoundView = UIView()
   let rightBoundView = UIView()
   var previewViews: [ChartLineView] = []
+  var linesVisibility: [Bool] = []
 
   var minX = 0
   var maxX = 0
@@ -25,6 +26,7 @@ class ChartPreviewView: UIView {
 
   var chartData: IChartData! {
     didSet {
+      linesVisibility = Array(repeating: true, count: chartData.lines.count)
       var minY = Int.max
       var maxY = Int.min
       for line in chartData.lines {
@@ -40,6 +42,24 @@ class ChartPreviewView: UIView {
       previewViews.forEach { $0.setY(min: minY, max: maxY) }
       let count = chartData.xAxis.count - 1
       setX(min: count - count / 5, max: count)
+    }
+  }
+
+  func setLineVisisble(_ visible: Bool, atIndex index: Int) {
+    guard linesVisibility[index] != visible else { return }
+    linesVisibility[index] = visible
+    var minY = Int.max
+    var maxY = Int.min
+    for i in 0..<chartData.lines.count {
+      guard linesVisibility[i] else { continue }
+      let line = chartData.lines[i]
+      minY = min(line.minY, minY)
+      maxY = max(line.maxY, maxY)
+    }
+    previewViews.forEach { $0.setY(min: minY, max: maxY, animated: true) }
+    let pv = previewViews[index]
+    UIView.animate(withDuration: kAnimationDuration) {
+      pv.alpha = visible ? 1 : 0
     }
   }
 
@@ -163,6 +183,6 @@ class ChartPreviewView: UIView {
   }
 
   required init?(coder aDecoder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
+    fatalError()
   }
 }
