@@ -1,7 +1,5 @@
 import UIKit
 
-fileprivate let kAnimationDuration = 0.1
-
 extension IChartLine {
   func makePath() -> UIBezierPath {
     let path = UIBezierPath()

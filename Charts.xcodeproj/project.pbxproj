@@ -17,6 +17,8 @@
 		4737946A2238E8F8005617D5 /* ChartDataParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 473794692238E8F8005617D5 /* ChartDataParser.swift */; };
 		4737946C22390506005617D5 /* ChartsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4737946B22390506005617D5 /* ChartsTableViewController.swift */; };
 		475B81002242339800F80B05 /* ChartPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475B80FF2242339800F80B05 /* ChartPreviewView.swift */; };
+		4772190722440DA600E5B227 /* ChartYAxisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4772190622440DA600E5B227 /* ChartYAxisView.swift */; };
+		4772190B2245659C00E5B227 /* ChartXAxisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4772190A2245659C00E5B227 /* ChartXAxisView.swift */; };
 		47740587223CBBAF008771BE /* ChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47740586223CBBAF008771BE /* ChartView.swift */; };
 		4774058A223CBC0D008771BE /* ChartViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47740588223CBC0D008771BE /* ChartViewController.swift */; };
 		4774058B223CBC0D008771BE /* ChartViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 47740589223CBC0D008771BE /* ChartViewController.xib */; };
@@ -36,6 +38,8 @@
 		473794692238E8F8005617D5 /* ChartDataParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataParser.swift; sourceTree = "<group>"; };
 		4737946B22390506005617D5 /* ChartsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartsTableViewController.swift; sourceTree = "<group>"; };
 		475B80FF2242339800F80B05 /* ChartPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartPreviewView.swift; sourceTree = "<group>"; };
+		4772190622440DA600E5B227 /* ChartYAxisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartYAxisView.swift; sourceTree = "<group>"; };
+		4772190A2245659C00E5B227 /* ChartXAxisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartXAxisView.swift; sourceTree = "<group>"; };
 		47740586223CBBAF008771BE /* ChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartView.swift; sourceTree = "<group>"; };
 		47740588223CBC0D008771BE /* ChartViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartViewController.swift; sourceTree = "<group>"; };
 		47740589223CBC0D008771BE /* ChartViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ChartViewController.xib; sourceTree = "<group>"; };
@@ -106,6 +110,8 @@
 				47740586223CBBAF008771BE /* ChartView.swift */,
 				47B66F44223D8C58009E57A4 /* ChartLineView.swift */,
 				475B80FF2242339800F80B05 /* ChartPreviewView.swift */,
+				4772190622440DA600E5B227 /* ChartYAxisView.swift */,
+				4772190A2245659C00E5B227 /* ChartXAxisView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -198,6 +204,8 @@
 				47B66F45223D8C58009E57A4 /* ChartLineView.swift in Sources */,
 				473794682238E3BF005617D5 /* ChartData.swift in Sources */,
 				47740587223CBBAF008771BE /* ChartView.swift in Sources */,
+				4772190B2245659C00E5B227 /* ChartXAxisView.swift in Sources */,
+				4772190722440DA600E5B227 /* ChartYAxisView.swift in Sources */,
 				4737946C22390506005617D5 /* ChartsTableViewController.swift in Sources */,
 				473794532238E2E3005617D5 /* AppDelegate.swift in Sources */,
 				475B81002242339800F80B05 /* ChartPreviewView.swift in Sources */,
@@ -347,18 +355,19 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 3T6FSDE8C7;
+				DEVELOPMENT_TEAM = 8L2P6RXNG7;
 				INFOPLIST_FILE = Charts/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = mapsme.reelase;
+				PRODUCT_BUNDLE_IDENTIFIER = com.beloal.tgcharts;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 1;
 				VALID_ARCHS = "arm64 arm64e";
+				"VALID_ARCHS[sdk=iphonesimulator*]" = x86_64;
 			};
 			name = Debug;
 		};
@@ -367,14 +376,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 3T6FSDE8C7;
+				DEVELOPMENT_TEAM = 8L2P6RXNG7;
 				INFOPLIST_FILE = Charts/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = mapsme.reelase;
+				PRODUCT_BUNDLE_IDENTIFIER = com.beloal.tgcharts;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 1;
