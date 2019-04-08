@@ -61,7 +61,6 @@ fileprivate class ChartPointInfoView: UIView {
       yl, yr, yb,
       st, sr, sb
       ])
-
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -147,7 +146,7 @@ fileprivate class ChartPointIntersectionsView: UIView {
     for point in points {
       let v = CircleView()
       v.color = point.color
-      v.frame = CGRect(x: 0, y: 0, width: 9, height: 9)
+      v.frame = CGRect(x: 0, y: 0, width: 6, height: 6)
       v.center = CGPoint(x: bounds.midX, y: point.point.y)
       intersectionViews.append(v)
       addSubview(v)
@@ -174,7 +173,7 @@ class ChartInfoView: UIView {
 
     isExclusiveTouch = true
     let lp = UILongPressGestureRecognizer(target: self, action: #selector(onPress(_:)))
-    lp.minimumPressDuration = 0
+    lp.minimumPressDuration = 0.1
     addGestureRecognizer(lp)
   }
 

@@ -43,4 +43,5 @@ class ChartTableViewCell: UITableViewCell {
   func setLineVisible(_ visible: Bool, atIndex index: Int) {
     chartView.setLineVisible(visible, atIndex: index)
   }
+  
 }

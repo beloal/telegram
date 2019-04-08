@@ -48,7 +48,7 @@ fileprivate class ChartXAxisInnerView: UIView {
       var f = l.frame
       let adjust = bounds.width > 0 ? x / bounds.width : 0
       f.origin = CGPoint(x: x - f.width * adjust, y: 0)
-      l.frame = f
+      l.frame = f.integral
     }
   }
 }

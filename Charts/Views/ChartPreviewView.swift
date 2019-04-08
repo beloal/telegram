@@ -31,6 +31,8 @@ class ChartPreviewView: UIView {
       linesVisibility = Array(repeating: true, count: chartData.lines.count)
       var minY = Int.max
       var maxY = Int.min
+      previewViews.forEach { $0.removeFromSuperview() }
+      previewViews.removeAll()
       for line in chartData.lines {
         minY = min(line.minY, minY)
         maxY = max(line.maxY, maxY)
@@ -43,7 +45,9 @@ class ChartPreviewView: UIView {
       }
       previewViews.forEach { $0.setY(min: minY, max: maxY) }
       let count = chartData.xAxis.count - 1
-      setX(min: count - count / 5, max: count)
+      minX = count - count / 5
+      maxX = count
+      updateViewPort()
     }
   }
 
@@ -58,7 +62,7 @@ class ChartPreviewView: UIView {
       minY = min(line.minY, minY)
       maxY = max(line.maxY, maxY)
     }
-    previewViews.forEach { $0.setY(min: minY, max: maxY, animated: true) }
+    previewViews.forEach { $0.setY(min: minY, max: maxY, animationStyle: .animated) }
     let pv = previewViews[index]
     UIView.animate(withDuration: kAnimationDuration) {
       pv.alpha = visible ? 1 : 0
@@ -98,6 +102,7 @@ class ChartPreviewView: UIView {
     let rightPan = UIPanGestureRecognizer(target: self, action: #selector(onRightPan(_:)))
     leftBoundView.addGestureRecognizer(leftPan)
     rightBoundView.addGestureRecognizer(rightPan)
+    clipsToBounds = true
   }
 
   @objc func onPan(_ sender: UIPanGestureRecognizer) {

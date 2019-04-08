@@ -27,8 +27,7 @@ class ChartLineView: UIView {
 
   var lineWidth: CGFloat = 1 {
     didSet {
-      let sl = layer as! CAShapeLayer
-      sl.lineWidth = lineWidth
+      shapeLayer.lineWidth = lineWidth
     }
   }
 
@@ -39,10 +38,9 @@ class ChartLineView: UIView {
       minY = chartLine.minY
       maxY = chartLine.maxY
       path = chartLine.makePath()
-      let sl = layer as! CAShapeLayer
-      sl.strokeColor = chartLine.color.cgColor
-      sl.fillColor = UIColor.clear.cgColor
-      sl.lineWidth = lineWidth
+      shapeLayer.strokeColor = chartLine.color.cgColor
+      shapeLayer.fillColor = UIColor.clear.cgColor
+      shapeLayer.lineWidth = lineWidth
       updateGraph()
     }
   }
@@ -57,21 +55,34 @@ class ChartLineView: UIView {
     fatalError()
   }
 
-  func setX(min: Int, max: Int, animated: Bool = false) {
+  var shapeLayer: CAShapeLayer {
+    return layer as! CAShapeLayer
+  }
+
+  func setViewport(minX: Int, maxX: Int, minY: Int, maxY: Int, animationStyle: ChartAnimation = .none) {
+    assert(minX < maxX && minY < maxY)
+    self.minX = minX
+    self.maxX = maxX
+    self.minY = minY
+    self.maxY = maxY
+    updateGraph(animationStyle: animationStyle)
+  }
+
+  func setX(min: Int, max: Int) {
     assert(min < max)
     minX = min
     maxX = max
-    updateGraph(animationDuration: animated ? kAnimationDuration : 0)
+    updateGraph()
   }
 
-  func setY(min: Int, max: Int, animated: Bool = false) {
+  func setY(min: Int, max: Int, animationStyle: ChartAnimation = .none) {
     assert(min < max)
     minY = min
     maxY = max
-    updateGraph(animationDuration: animated ? kAnimationDuration : 0)
+    updateGraph(animationStyle: animationStyle)
   }
 
-  private func updateGraph(animationDuration: TimeInterval = 0) {
+  private func updateGraph(animationStyle: ChartAnimation = .none) {
     guard let realPath = path?.copy() as? UIBezierPath else { return }
 
     let xScale = bounds.width / CGFloat(maxX - minX)
@@ -83,29 +94,27 @@ class ChartLineView: UIView {
     let transform = scale.concatenating(translate)
     realPath.apply(transform)
 
-    let sl = layer as! CAShapeLayer
-    if animationDuration > 0 {
-      var timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-      if sl.animationKeys()?.contains("path") ?? false,
-        let presentation = sl.presentation(),
+    if animationStyle != .none {
+      let timingFunction = CAMediaTimingFunction(name: animationStyle == .interactive ? .linear : .easeInEaseOut)
+      if shapeLayer.animationKeys()?.contains("path") ?? false,
+        let presentation = shapeLayer.presentation(),
         let path = presentation.path {
-        sl.removeAnimation(forKey: "path")
-        sl.path = path
-        timingFunction = CAMediaTimingFunction(name: .linear)
+        shapeLayer.removeAnimation(forKey: "path")
+        shapeLayer.path = path
       }
 
       let animation = CABasicAnimation(keyPath: "path")
-      animation.duration = animationDuration
-      animation.fromValue = sl.path
+      animation.duration = animationStyle.rawValue
+      animation.fromValue = shapeLayer.path
       animation.timingFunction = timingFunction
       layer.add(animation, forKey: "path")
     }
 
-    sl.path = realPath.cgPath
+    shapeLayer.path = realPath.cgPath
   }
 
   override func layoutSubviews() {
     super.layoutSubviews()
-    updateGraph(animationDuration: UIView.inheritedAnimationDuration)
+    updateGraph()
   }
 }

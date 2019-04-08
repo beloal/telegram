@@ -1,6 +1,12 @@
 import UIKit
 
-let kAnimationDuration = 0.1
+let kAnimationDuration = 0.3
+
+enum ChartAnimation: TimeInterval {
+  case none = 0.0
+  case animated = 0.3
+  case interactive = 0.1
+}
 
 class ChartView: UIView {
   let chartsContainerView = UIView()
@@ -9,9 +15,6 @@ class ChartView: UIView {
   let xAxisView = ChartXAxisView()
   let chartInfoView = ChartInfoView()
   var lineViews: [ChartLineView] = []
-
-  var lowerBound = 0
-  var upperBound = 0
 
   private(set) var linesVisibility: [Bool] = []
 
@@ -24,6 +27,8 @@ class ChartView: UIView {
       
       linesVisibility = Array(repeating: true, count: chartData.lines.count)
 
+      lineViews.forEach { $0.removeFromSuperview() }
+      lineViews.removeAll()
       var lower = Int.max
       var upper = Int.min
       for line in chartData.lines {
@@ -52,12 +57,9 @@ class ChartView: UIView {
 
       yAxisView.setBounds(lower: lower, upper: upper, steps: steps)
       xAxisView.values = chartData.xAxis
-      xAxisView.setBounds(lower: 0, upper: chartData.xAxis.count - 1)
-
-      lowerBound = lower
-      upperBound = upper
-      lineViews.forEach { $0.setY(min: lower, max: upper) }
       chartPreviewView.chartData = chartData
+      xAxisView.setBounds(lower: chartPreviewView.minX, upper: chartPreviewView.maxX)
+      updateCharts()
     }
   }
 
@@ -105,50 +107,52 @@ class ChartView: UIView {
     }
 
     linesVisibility[index] = visible
-    var lower = Int.max
-
-    for i in 0..<chartData.lines.count {
-      guard linesVisibility[i] else { continue }
-      let line = chartData.lines[i]
-      lower = min(line.minY, lower)
-    }
-
-    lowerBound = lower
     chartPreviewView.setLineVisible(visible, atIndex: index)
-    chartPreviewView(chartPreviewView, didChangeMinX: xAxisView.lowerBound, maxX: xAxisView.upperBound)
+    updateCharts(animationStyle: .animated)
 
     let lv = lineViews[index]
     UIView.animate(withDuration: kAnimationDuration) {
       lv.alpha = visible ? 1 : 0
     }
   }
-}
 
-extension ChartView: ChartPreviewViewDelegate {
-  func chartPreviewView(_ view: ChartPreviewView, didChangeMinX minX: Int, maxX: Int) {
+  func updateCharts(animationStyle: ChartAnimation = .none) {
+    var lower = Int.max
     var upper = Int.min
 
     for i in 0..<chartData.lines.count {
       guard linesVisibility[i] else { continue }
       let line = chartData.lines[i]
-      let subrange = line.values[minX..<maxX]
+      lower = min(line.minY, lower)
+      let subrange = line.values[xAxisView.lowerBound...xAxisView.upperBound]
       subrange.forEach { upper = max($0, upper) }
     }
 
-    let step = (upper - lowerBound) / 6 + 1
-    upper = lowerBound + step * 6
+    let step = (upper - lower) / 6 + 1
+    upper = lower + step * 6
     var steps: [Int] = []
     for i in 0..<6 {
-      steps.append(lowerBound + step * i)
+      steps.append(lower + step * i)
     }
 
     if (yAxisView.upperBound != upper) {
-      yAxisView.setBounds(lower: lowerBound, upper: upper, steps: steps)
+      yAxisView.setBounds(lower: lower, upper: upper, steps: steps, animationStyle: animationStyle)
     }
-    xAxisView.setBounds(lower: minX, upper: maxX)
 
-    lineViews.forEach { $0.setX(min: minX, max: maxX, animated: true) }
-    lineViews.forEach { $0.setY(min: lowerBound, max: upper, animated: true)}
+    lineViews.forEach {
+      $0.setViewport(minX: xAxisView.lowerBound,
+                     maxX: xAxisView.upperBound,
+                     minY: lower,
+                     maxY: upper,
+                     animationStyle: animationStyle)
+    }
+  }
+}
+
+extension ChartView: ChartPreviewViewDelegate {
+  func chartPreviewView(_ view: ChartPreviewView, didChangeMinX minX: Int, maxX: Int) {
+    xAxisView.setBounds(lower: minX, upper: maxX)
+    updateCharts(animationStyle: .interactive)
   }
 }
 
@@ -174,6 +178,4 @@ extension ChartView: ChartInfoViewDelegate {
 
     return (date, result)
   }
-
-
 }

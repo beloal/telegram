@@ -19,6 +19,10 @@ fileprivate class ChartYAxisInnerView: UIView {
     }
   }
 
+  var shapeLayer: CAShapeLayer {
+    return layer as! CAShapeLayer
+  }
+
   func makeLabel(y: Int) -> UILabel {
     let label = UILabel()
     label.font = font
@@ -46,21 +50,20 @@ fileprivate class ChartYAxisInnerView: UIView {
     }
 
     path = p
-    let sl = layer as! CAShapeLayer
-    sl.fillColor = UIColor.clear.cgColor
-    sl.strokeColor = UIColor(white: 0, alpha: 0.2).cgColor
-    sl.lineWidth = CGFloat(1) / UIScreen.main.scale
+    shapeLayer.fillColor = UIColor.clear.cgColor
+    shapeLayer.strokeColor = UIColor(white: 0, alpha: 0.2).cgColor
+    shapeLayer.lineWidth = CGFloat(1) / UIScreen.main.scale
 
     updateGrid()
   }
 
-  func updateBounds(lower:Int, upper: Int) {
+  func updateBounds(lower:Int, upper: Int, animationStyle: ChartAnimation = .none) {
     lowerBound = lower
     upperBound = upper
-    updateGrid(animationDuration: kAnimationDuration)
+    updateGrid(animationStyle: animationStyle)
   }
 
-  func updateGrid(animationDuration: TimeInterval = 0) {
+  func updateGrid(animationStyle: ChartAnimation = .none) {
     guard let realPath = path?.copy() as? UIBezierPath else { return }
 
     let yScale = (bounds.height) / CGFloat(upperBound - lowerBound)
@@ -70,31 +73,29 @@ fileprivate class ChartYAxisInnerView: UIView {
     let transform = scale.concatenating(translate)
     realPath.apply(transform)
 
-    let sl = layer as! CAShapeLayer
-
-    if animationDuration != 0 {
-      var timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-      if sl.animationKeys()?.contains("path") ?? false,
-        let presentation = sl.presentation(),
+    if animationStyle != .none {
+      let timingFunction = CAMediaTimingFunction(name: animationStyle == .interactive ? .linear : .easeInEaseOut)
+      if shapeLayer.animationKeys()?.contains("path") ?? false,
+        let presentation = shapeLayer.presentation(),
         let path = presentation.path {
-        sl.removeAnimation(forKey: "path")
-        sl.path = path
-        timingFunction = CAMediaTimingFunction(name: .linear)
+        shapeLayer.removeAnimation(forKey: "path")
+        shapeLayer.path = path
       }
 
       let animation = CABasicAnimation(keyPath: "path")
-      animation.duration = animationDuration
-      animation.fromValue = sl.path
+      let duration = animationStyle.rawValue
+      animation.duration = duration
+      animation.fromValue = shapeLayer.path
       animation.timingFunction = timingFunction
       layer.add(animation, forKey: "path")
-      UIView.animate(withDuration: animationDuration) {
+      UIView.animate(withDuration: duration) {
         self.updateLabels()
       }
     } else {
       updateLabels()
     }
 
-    sl.path = realPath.cgPath
+    shapeLayer.path = realPath.cgPath
   }
 
   func updateLabels() {
@@ -103,9 +104,8 @@ fileprivate class ChartYAxisInnerView: UIView {
       let l = labels[i]
       var f = l.frame
       f.origin = CGPoint(x: 0, y: y)
-      l.frame = f
+      l.frame = f.integral
     }
-
   }
 }
 
@@ -121,7 +121,7 @@ class ChartYAxisView: UIView {
 
   private var gridView: ChartYAxisInnerView?
 
-  func setBounds(lower: Int, upper: Int, steps: [Int]) {
+  func setBounds(lower: Int, upper: Int, steps: [Int], animationStyle: ChartAnimation = .none) {
     let gv = ChartYAxisInnerView()
     gv.frame = bounds
     gv.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -130,9 +130,9 @@ class ChartYAxisView: UIView {
     if let gridView = gridView {
       gv.setBounds(lower: lowerBound, upper: upperBound, steps: steps)
       gv.alpha = 0
-      gv.updateBounds(lower: lower, upper:upper)
-      gridView.updateBounds(lower: lower, upper:upper)
-      UIView.animate(withDuration: kAnimationDuration, animations: {
+      gv.updateBounds(lower: lower, upper:upper, animationStyle: animationStyle)
+      gridView.updateBounds(lower: lower, upper:upper, animationStyle: animationStyle)
+      UIView.animate(withDuration: animationStyle.rawValue, animations: {
         gv.alpha = 1
         gridView.alpha = 0
       }) { _ in
