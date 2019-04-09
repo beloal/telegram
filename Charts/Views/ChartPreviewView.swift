@@ -44,7 +44,7 @@ class ChartPreviewView: UIView {
         previewContainerView.addSubview(v)
       }
       previewViews.forEach { $0.setY(min: minY, max: maxY) }
-      let count = chartData.xAxis.count - 1
+      let count = chartData.xAxisLabels.count - 1
       minX = count - count / 5
       maxX = count
       updateViewPort()
@@ -108,7 +108,7 @@ class ChartPreviewView: UIView {
   @objc func onPan(_ sender: UIPanGestureRecognizer) {
     if sender.state == .changed {
       let p = sender.translation(in: viewPortView)
-      let count = chartData.xAxis.count - 1
+      let count = chartData.xAxisLabels.count - 1
       let x = Int((viewPortView.frame.minX + p.x) / bounds.width * CGFloat(count))
       let dx = maxX - minX
       let mx = x + dx
@@ -132,7 +132,7 @@ class ChartPreviewView: UIView {
   @objc func onLeftPan(_ sender: UIPanGestureRecognizer) {
     if sender.state == .changed {
       let p = sender.translation(in: leftBoundView)
-      let count = chartData.xAxis.count - 1
+      let count = chartData.xAxisLabels.count - 1
       let x = Int((viewPortView.frame.minX + p.x) / bounds.width * CGFloat(count))
 
       if x > 0 && x < maxX && maxX - x >= count / 10 {
@@ -153,7 +153,7 @@ class ChartPreviewView: UIView {
 
   @objc func onRightPan(_ sender: UIPanGestureRecognizer) {
     let p = sender.translation(in: viewPortView)
-    let count = chartData.xAxis.count - 1
+    let count = chartData.xAxisLabels.count - 1
     let mx = Int((viewPortView.frame.maxX + p.x) / bounds.width * CGFloat(count))
 
     if mx > minX && mx < count && mx - minX >= count / 10 {
@@ -180,7 +180,7 @@ class ChartPreviewView: UIView {
   }
 
   func updateViewPort() {
-    let count = CGFloat(chartData.xAxis.count - 1)
+    let count = CGFloat(chartData.xAxisLabels.count - 1)
     viewPortView.frame = CGRect(x: CGFloat(minX) / count * bounds.width,
                                 y: bounds.minY,
                                 width: CGFloat(maxX - minX) / count * bounds.width,

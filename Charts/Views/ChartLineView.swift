@@ -1,21 +1,5 @@
 import UIKit
 
-extension IChartLine {
-  func makePath() -> UIBezierPath {
-    let path = UIBezierPath()
-    for i in 0..<values.count {
-      let x = CGFloat(i)
-      let y = CGFloat(values[i] - minY)
-      if i == 0 {
-        path.move(to: CGPoint(x: x, y: y))
-      } else {
-        path.addLine(to: CGPoint(x: x, y: y))
-      }
-    }
-    return path
-  }
-}
-
 class ChartLineView: UIView {
   override class var layerClass: AnyClass { return CAShapeLayer.self }
 
@@ -37,7 +21,7 @@ class ChartLineView: UIView {
       maxX = chartLine.values.count - 1
       minY = chartLine.minY
       maxY = chartLine.maxY
-      path = chartLine.makePath()
+      path = chartLine.path
       shapeLayer.strokeColor = chartLine.color.cgColor
       shapeLayer.fillColor = UIColor.clear.cgColor
       shapeLayer.lineWidth = lineWidth

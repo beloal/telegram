@@ -21,6 +21,7 @@
 		4772190F22479D6900E5B227 /* ChartTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4772190E22479D6900E5B227 /* ChartTableViewController.swift */; };
 		4772191122479DD600E5B227 /* ChartTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4772191022479DD600E5B227 /* ChartTableViewCell.swift */; };
 		47740587223CBBAF008771BE /* ChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47740586223CBBAF008771BE /* ChartView.swift */; };
+		477E9DD7225D320F00D72D55 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 477E9DD6225D320F00D72D55 /* Theme.swift */; };
 		47B66F45223D8C58009E57A4 /* ChartLineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47B66F44223D8C58009E57A4 /* ChartLineView.swift */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +42,7 @@
 		4772190E22479D6900E5B227 /* ChartTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartTableViewController.swift; sourceTree = "<group>"; };
 		4772191022479DD600E5B227 /* ChartTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartTableViewCell.swift; sourceTree = "<group>"; };
 		47740586223CBBAF008771BE /* ChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartView.swift; sourceTree = "<group>"; };
+		477E9DD6225D320F00D72D55 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		47B66F40223CED63009E57A4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		47B66F42223CED69009E57A4 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		47B66F44223D8C58009E57A4 /* ChartLineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartLineView.swift; sourceTree = "<group>"; };
@@ -77,6 +79,7 @@
 		473794512238E2E3005617D5 /* Charts */ = {
 			isa = PBXGroup;
 			children = (
+				477E9DD5225D31F500D72D55 /* Theme */,
 				473794662238E38F005617D5 /* ChartData */,
 				475B80FD22403E5900F80B05 /* Views */,
 				473794522238E2E3005617D5 /* AppDelegate.swift */,
@@ -111,6 +114,14 @@
 				474902CA2247F9DA008D71E0 /* ChartInfoView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		477E9DD5225D31F500D72D55 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				477E9DD6225D320F00D72D55 /* Theme.swift */,
+			);
+			path = Theme;
 			sourceTree = "<group>";
 		};
 		47B66F3F223CED63009E57A4 /* Frameworks */ = {
@@ -203,6 +214,7 @@
 				47740587223CBBAF008771BE /* ChartView.swift in Sources */,
 				4772190B2245659C00E5B227 /* ChartXAxisView.swift in Sources */,
 				4772190722440DA600E5B227 /* ChartYAxisView.swift in Sources */,
+				477E9DD7225D320F00D72D55 /* Theme.swift in Sources */,
 				473794532238E2E3005617D5 /* AppDelegate.swift in Sources */,
 				475B81002242339800F80B05 /* ChartPreviewView.swift in Sources */,
 			);

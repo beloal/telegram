@@ -56,7 +56,7 @@ class ChartView: UIView {
       }
 
       yAxisView.setBounds(lower: lower, upper: upper, steps: steps)
-      xAxisView.values = chartData.xAxis
+      xAxisView.values = chartData.xAxisLabels
       chartPreviewView.chartData = chartData
       xAxisView.setBounds(lower: chartPreviewView.minX, upper: chartPreviewView.maxX)
       updateCharts()
@@ -161,8 +161,8 @@ extension ChartView: ChartInfoViewDelegate {
     let p = convert(CGPoint(x: pointX, y: 0), from: view)
     let x = Int(round((p.x / bounds.width) * CGFloat(xAxisView.upperBound - xAxisView.lowerBound))) + xAxisView.lowerBound
     let px = CGFloat(x - xAxisView.lowerBound) / CGFloat(xAxisView.upperBound - xAxisView.lowerBound) * bounds.width
-    guard x < chartData.xAxis.count && x >= 0 else { return nil }
-    let date = chartData.xAxis[x]
+    guard x < chartData.xAxisDates.count && x >= 0 else { return nil }
+    let date = chartData.xAxisDates[x]
 
     var result: [ChartLineInfo] = []
     for i in 0..<chartData.lines.count {

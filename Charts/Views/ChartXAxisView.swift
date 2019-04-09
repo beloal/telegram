@@ -54,27 +54,12 @@ fileprivate class ChartXAxisInnerView: UIView {
 }
 
 class ChartXAxisView: UIView {
-  let formatter = DateFormatter()
   var lowerBound = 0
   var upperBound = 0
 
-  var labels: [String] = []
-  var values: [Date] = [] {
-    didSet {
-      labels = values.map{ formatter.string(from: $0) }
-    }
-  }
+  var values: [String] = []
 
   private var labelsView: ChartXAxisInnerView?
-
-  override init(frame: CGRect) {
-    super.init(frame: frame)
-    formatter.dateFormat = "MMM dd"
-  }
-
-  required init?(coder aDecoder: NSCoder) {
-    fatalError()
-  }
 
   func setBounds(lower: Int, upper: Int) {
     lowerBound = lower
@@ -84,9 +69,9 @@ class ChartXAxisView: UIView {
     var steps: [String] = []
     for i in 0..<5 {
       let x = lower + Int(round(step * CGFloat(i)))
-      steps.append(labels[x])
+      steps.append(values[x])
     }
-    steps.append(labels[upper])
+    steps.append(values[upper])
 
     let lv = ChartXAxisInnerView()
     lv.frame = bounds

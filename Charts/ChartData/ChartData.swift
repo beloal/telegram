@@ -1,7 +1,8 @@
 import UIKit
 
 protocol IChartData {
-  var xAxis: [Date] { get }
+  var xAxisLabels: [String] { get }
+  var xAxisDates: [Date] { get }
   var lines: [IChartLine] { get }
 }
 
@@ -11,4 +12,5 @@ protocol IChartLine {
   var color: UIColor { get }
   var minY: Int { get }
   var maxY: Int { get }
+  var path: UIBezierPath { get }
 }

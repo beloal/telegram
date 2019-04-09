@@ -3,7 +3,7 @@ import UIKit
 fileprivate class ChartYAxisInnerView: UIView {
   override class var layerClass: AnyClass { return CAShapeLayer.self }
 
-  private let font = UIFont.systemFont(ofSize: 12, weight: .regular)
+  private static let font = UIFont.systemFont(ofSize: 12, weight: .regular)
   var lowerBound = 0
   var upperBound = 0
   var steps: [Int] = []
@@ -25,7 +25,7 @@ fileprivate class ChartYAxisInnerView: UIView {
 
   func makeLabel(y: Int) -> UILabel {
     let label = UILabel()
-    label.font = font
+    label.font = ChartYAxisInnerView.font
     label.textColor = UIColor(white: 0, alpha: 0.3)
     label.text = "\(y)"
     label.sizeToFit()

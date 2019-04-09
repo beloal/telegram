@@ -18,7 +18,8 @@ fileprivate extension UIColor {
 }
 
 fileprivate struct ChartData: IChartData {
-  var xAxis: [Date]
+  var xAxisLabels: [String]
+  var xAxisDates: [Date]
   var lines: [IChartLine]
 }
 
@@ -31,6 +32,21 @@ fileprivate struct ChartLine: IChartLine {
       if val < minY { minY = val }
       if val > maxY { maxY = val }
     }
+    self.path = ChartLine.makePath(values: values, minY: minY)
+  }
+
+  private static func makePath(values: [Int], minY: Int) -> UIBezierPath {
+    let path = UIBezierPath()
+    for i in 0..<values.count {
+      let x = CGFloat(i)
+      let y = CGFloat(values[i] - minY)
+      if i == 0 {
+        path.move(to: CGPoint(x: x, y: y))
+      } else {
+        path.addLine(to: CGPoint(x: x, y: y))
+      }
+    }
+    return path
   }
 
   var values: [Int]
@@ -38,6 +54,7 @@ fileprivate struct ChartLine: IChartLine {
   var color: UIColor
   var minY: Int = Int.max
   var maxY: Int = Int.min
+  var path: UIBezierPath
 }
 
 fileprivate struct Column {
@@ -50,6 +67,12 @@ protocol IChartDataParser {
 }
 
 class ChartDataJsonParser: IChartDataParser {
+  let formatter = DateFormatter()
+
+  init() {
+    formatter.dateFormat = "MMM dd"
+  }
+
   func parseData(_ data: Data) -> [IChartData]? {
     guard let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []) else {
       assertionFailure("Can't parse data")
@@ -87,7 +110,8 @@ class ChartDataJsonParser: IChartDataParser {
         return nil
     }
 
-    var x: [Date]?
+    var x: [String]?
+    var xd: [Date]?
     var lines: [ChartLine] = []
 
     for column in columns {
@@ -106,20 +130,19 @@ class ChartDataJsonParser: IChartDataParser {
         }
         lines.append(ChartLine(values: column.values, name: name, color: color))
       case "x":
-        x = column.values.map({ timestamp in
-          Date(timeIntervalSince1970: TimeInterval(timestamp / 1000))
-        })
+        xd = column.values.map { Date(timeIntervalSince1970: TimeInterval($0 / 1000)) }
+        x = xd?.map { formatter.string(from: $0) }
       default:
         assertionFailure("Wrong data format")
         return nil
       }
     }
-    guard let xAxis = x, lines.count > 0 else {
+    guard let xAxisLabels = x, let xAxisDates = xd, lines.count > 0 else {
       assertionFailure("Wrong data format")
       return nil
     }
 
-    return ChartData(xAxis: xAxis, lines: lines)
+    return ChartData(xAxisLabels: xAxisLabels, xAxisDates: xAxisDates, lines: lines)
   }
 
   private func parseColumnsJson(_ columnsJson: [[Any]]) -> [Column]? {
