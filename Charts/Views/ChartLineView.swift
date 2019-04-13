@@ -7,7 +7,6 @@ class ChartLineView: UIView {
   private var maxX = 0
   private var minY = 0
   private var maxY = 0
-  private var path: UIBezierPath?
 
   var lineWidth: CGFloat = 1 {
     didSet {
@@ -15,15 +14,21 @@ class ChartLineView: UIView {
     }
   }
 
-  var chartLine: IChartLine! {
+  var chartLine: ChartPresentationLine! {
     didSet {
       guard let chartLine = chartLine else { return }
       maxX = chartLine.values.count - 1
       minY = chartLine.minY
       maxY = chartLine.maxY
-      path = chartLine.path
       shapeLayer.strokeColor = chartLine.color.cgColor
-      shapeLayer.fillColor = UIColor.clear.cgColor
+      switch chartLine.type {
+      case .line:
+        shapeLayer.fillColor = UIColor.clear.cgColor
+      case .bar:
+        fallthrough
+      case .area:
+        shapeLayer.fillColor = chartLine.color.cgColor
+      }
       shapeLayer.lineWidth = lineWidth
       updateGraph()
     }
@@ -67,7 +72,7 @@ class ChartLineView: UIView {
   }
 
   private func updateGraph(animationStyle: ChartAnimation = .none) {
-    guard let realPath = path?.copy() as? UIBezierPath else { return }
+    guard let realPath = chartLine?.path.copy() as? UIBezierPath else { return }
 
     let xScale = bounds.width / CGFloat(maxX - minX)
     let xTranslate = -bounds.width * CGFloat(minX) / CGFloat(maxX - minX)

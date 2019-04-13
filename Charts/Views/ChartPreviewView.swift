@@ -12,7 +12,6 @@ class ChartPreviewView: UIView {
   let leftTintView = UIView()
   let rightTintView = UIView()
   var previewViews: [ChartLineView] = []
-  var linesVisibility: [Bool] = []
 
   var minX = 0
   var maxX = 0
@@ -26,25 +25,25 @@ class ChartPreviewView: UIView {
     }
   }
 
-  var chartData: IChartData! {
+  var chartData: ChartPresentationData! {
     didSet {
-      linesVisibility = Array(repeating: true, count: chartData.lines.count)
-      var minY = Int.max
-      var maxY = Int.min
       previewViews.forEach { $0.removeFromSuperview() }
       previewViews.removeAll()
-      for line in chartData.lines {
-        minY = min(line.minY, minY)
-        maxY = max(line.maxY, maxY)
+      for i in 0..<chartData.linesCount {
+        let line = chartData.lineAt(i)
         let v = ChartLineView()
         v.chartLine = line
-        previewViews.append(v)
         v.frame = previewContainerView.bounds
         v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        previewContainerView.addSubview(v)
+        if let last = previewViews.last {
+          previewContainerView.insertSubview(v, belowSubview: last)
+        } else {
+          previewContainerView.addSubview(v)
+        }
+        previewViews.append(v)
       }
-      previewViews.forEach { $0.setY(min: minY, max: maxY) }
-      let count = chartData.xAxisLabels.count - 1
+      previewViews.forEach { $0.setY(min: chartData.lower, max: chartData.upper) }
+      let count = chartData.pointsCount - 1
       minX = count - count / 5
       maxX = count
       updateViewPort()
@@ -52,17 +51,7 @@ class ChartPreviewView: UIView {
   }
 
   func setLineVisible(_ visible: Bool, atIndex index: Int) {
-    guard linesVisibility[index] != visible else { return }
-    linesVisibility[index] = visible
-    var minY = Int.max
-    var maxY = Int.min
-    for i in 0..<chartData.lines.count {
-      guard linesVisibility[i] else { continue }
-      let line = chartData.lines[i]
-      minY = min(line.minY, minY)
-      maxY = max(line.maxY, maxY)
-    }
-    previewViews.forEach { $0.setY(min: minY, max: maxY, animationStyle: .animated) }
+    previewViews.forEach { $0.setY(min: chartData.lower, max: chartData.upper, animationStyle: .animated) }
     let pv = previewViews[index]
     UIView.animate(withDuration: kAnimationDuration) {
       pv.alpha = visible ? 1 : 0
@@ -108,7 +97,7 @@ class ChartPreviewView: UIView {
   @objc func onPan(_ sender: UIPanGestureRecognizer) {
     if sender.state == .changed {
       let p = sender.translation(in: viewPortView)
-      let count = chartData.xAxisLabels.count - 1
+      let count = chartData.labels.count - 1
       let x = Int((viewPortView.frame.minX + p.x) / bounds.width * CGFloat(count))
       let dx = maxX - minX
       let mx = x + dx
@@ -132,7 +121,7 @@ class ChartPreviewView: UIView {
   @objc func onLeftPan(_ sender: UIPanGestureRecognizer) {
     if sender.state == .changed {
       let p = sender.translation(in: leftBoundView)
-      let count = chartData.xAxisLabels.count - 1
+      let count = chartData.labels.count - 1
       let x = Int((viewPortView.frame.minX + p.x) / bounds.width * CGFloat(count))
 
       if x > 0 && x < maxX && maxX - x >= count / 10 {
@@ -153,7 +142,7 @@ class ChartPreviewView: UIView {
 
   @objc func onRightPan(_ sender: UIPanGestureRecognizer) {
     let p = sender.translation(in: viewPortView)
-    let count = chartData.xAxisLabels.count - 1
+    let count = chartData.labels.count - 1
     let mx = Int((viewPortView.frame.maxX + p.x) / bounds.width * CGFloat(count))
 
     if mx > minX && mx < count && mx - minX >= count / 10 {
@@ -180,7 +169,7 @@ class ChartPreviewView: UIView {
   }
 
   func updateViewPort() {
-    let count = CGFloat(chartData.xAxisLabels.count - 1)
+    let count = CGFloat(chartData.labels.count - 1)
     viewPortView.frame = CGRect(x: CGFloat(minX) / count * bounds.width,
                                 y: bounds.minY,
                                 width: CGFloat(maxX - minX) / count * bounds.width,

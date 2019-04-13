@@ -21,40 +21,23 @@ fileprivate struct ChartData: IChartData {
   var xAxisLabels: [String]
   var xAxisDates: [Date]
   var lines: [IChartLine]
+  var type: ChartType
 }
 
+
 fileprivate struct ChartLine: IChartLine {
-  init(values: [Int], name: String, color: UIColor) {
+  init(values: [Int], name: String, color: UIColor, type: ChartLineType) {
     self.values = values
     self.name = name
     self.color = color
-    for val in values {
-      if val < minY { minY = val }
-      if val > maxY { maxY = val }
-    }
-    self.path = ChartLine.makePath(values: values, minY: minY)
+    self.type = type
   }
 
-  private static func makePath(values: [Int], minY: Int) -> UIBezierPath {
-    let path = UIBezierPath()
-    for i in 0..<values.count {
-      let x = CGFloat(i)
-      let y = CGFloat(values[i] - minY)
-      if i == 0 {
-        path.move(to: CGPoint(x: x, y: y))
-      } else {
-        path.addLine(to: CGPoint(x: x, y: y))
-      }
-    }
-    return path
-  }
-
-  var values: [Int]
-  var name: String
-  var color: UIColor
-  var minY: Int = Int.max
-  var maxY: Int = Int.min
-  var path: UIBezierPath
+  let values: [Int]
+  var aggregatedValues: [Int] { return values }
+  let name: String
+  let color: UIColor
+  let type: ChartLineType
 }
 
 fileprivate struct Column {
@@ -79,20 +62,13 @@ class ChartDataJsonParser: IChartDataParser {
       return nil
     }
 
-    guard let jsonArray = jsonObject as? [Any] else {
+    var result: [IChartData] = []
+    guard let chartJson = jsonObject as? [String : Any],
+      let chartData = parseChartJson(chartJson) else {
       assertionFailure("Wrong data format")
       return nil
     }
-    
-    var result: [IChartData] = []
-    for item in jsonArray {
-      guard let chartJson = item as? [String : Any],
-        let chartData = parseChartJson(chartJson) else {
-        assertionFailure("Wrong data format")
-        continue
-      }
-      result.append(chartData)
-    }
+    result.append(chartData)
     return result.isEmpty ? nil : result
   }
 
@@ -112,7 +88,7 @@ class ChartDataJsonParser: IChartDataParser {
 
     var x: [String]?
     var xd: [Date]?
-    var lines: [ChartLine] = []
+    var lines: [IChartLine] = []
 
     for column in columns {
       guard let type = types[column.key] else {
@@ -121,20 +97,20 @@ class ChartDataJsonParser: IChartDataParser {
       }
 
       switch type {
-      case "line":
-        guard let name = names[column.key],
-          let colorString = colors[column.key],
-          let color = UIColor(hexString: colorString) else {
-            assertionFailure("Wrong data format")
-            return nil
-        }
-        lines.append(ChartLine(values: column.values, name: name, color: color))
       case "x":
         xd = column.values.map { Date(timeIntervalSince1970: TimeInterval($0 / 1000)) }
         x = xd?.map { formatter.string(from: $0) }
       default:
-        assertionFailure("Wrong data format")
-        return nil
+        guard let name = names[column.key],
+          let colorString = colors[column.key],
+          let color = UIColor(hexString: colorString),
+          let lineType = ChartLineType(rawValue: type) else {
+            assertionFailure("Wrong data format")
+            return nil
+        }
+        let line = ChartLine(values: column.values, name: name, color: color, type: lineType)
+        lines.append(line)
+        break
       }
     }
     guard let xAxisLabels = x, let xAxisDates = xd, lines.count > 0 else {
@@ -142,7 +118,13 @@ class ChartDataJsonParser: IChartDataParser {
       return nil
     }
 
-    return ChartData(xAxisLabels: xAxisLabels, xAxisDates: xAxisDates, lines: lines)
+    var chartType: ChartType = .regular
+
+    if chartJson["y_scaled"] as? Bool ?? false { chartType = .yScaled }
+    if chartJson["stacked"] as? Bool ?? false { chartType = .stacked }
+    if chartJson["percentage"] as? Bool ?? false { chartType = .percentage }
+
+    return ChartData(xAxisLabels: xAxisLabels, xAxisDates: xAxisDates, lines: lines, type: chartType)
   }
 
   private func parseColumnsJson(_ columnsJson: [[Any]]) -> [Column]? {
