@@ -25,24 +25,26 @@ class ChartView: UIView {
 
   weak var headerUpdateTimer: Timer?
 
+  var rasterize = false {
+    didSet {
+      lineViews.forEach { $0.layer.shouldRasterize = rasterize }
+    }
+  }
+
   var chartData: ChartPresentationData! {
     didSet {
       chartData.delegate = self
       lineViews.forEach { $0.removeFromSuperview() }
       lineViews.removeAll()
-      for i in 0..<chartData.linesCount {
+      for i in (0..<chartData.linesCount).reversed() {
         let line = chartData.lineAt(i)
         let v = ChartLineView()
         v.chartLine = line
         v.lineWidth = 2
         v.frame = chartsContainerView.bounds
         v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        if let last = lineViews.last {
-          chartsContainerView.insertSubview(v, belowSubview: last)
-        } else {
-          chartsContainerView.addSubview(v)
-        }
-        lineViews.append(v)
+        chartsContainerView.addSubview(v)
+        lineViews.insert(v, at: 0)
       }
 
       yAxisLeftView.frame = chartsContainerView.bounds
@@ -69,6 +71,7 @@ class ChartView: UIView {
       chartPreviewView.chartData = chartData
       xAxisView.setBounds(lower: chartPreviewView.minX, upper: chartPreviewView.maxX)
       updateCharts()
+      updateHeader()
     }
   }
 
@@ -186,6 +189,12 @@ class ChartView: UIView {
                      animationStyle: animationStyle)
     }
   }
+
+  func updateHeader() {
+    let date1 = chartData.dateAt(xAxisView.lowerBound)
+    let date2 = chartData.dateAt(xAxisView.upperBound)
+    headerView.datesLabel.text = "\(df.string(from: date1)) - \(df.string(from: date2))"
+  }
 }
 
 extension ChartView: ChartPreviewViewDelegate {
@@ -199,9 +208,7 @@ extension ChartView: ChartPreviewViewDelegate {
     }
 
     headerUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { _ in
-      let date1 = self.chartData.dateAt(minX)
-      let date2 = self.chartData.dateAt(maxX)
-      self.headerView.datesLabel.text = "\(df.string(from: date1)) - \(df.string(from: date2))"
+      self.updateHeader()
     })
   }
 }

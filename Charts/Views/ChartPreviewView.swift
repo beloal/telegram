@@ -84,19 +84,15 @@ class ChartPreviewView: UIView {
     didSet {
       previewViews.forEach { $0.removeFromSuperview() }
       previewViews.removeAll()
-      for i in 0..<chartData.linesCount {
+      for i in (0..<chartData.linesCount).reversed() {
         let line = chartData.lineAt(i)
         let v = ChartLineView()
         v.isPreview = true
         v.chartLine = line
         v.frame = previewContainerView.bounds
         v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        if let last = previewViews.last {
-          previewContainerView.insertSubview(v, belowSubview: last)
-        } else {
-          previewContainerView.addSubview(v)
-        }
-        previewViews.append(v)
+        previewContainerView.addSubview(v)
+        previewViews.insert(v, at: 0)
       }
       if chartData.type != .yScaled {
         previewViews.forEach { $0.setY(min: chartData.lower, max: chartData.upper) }

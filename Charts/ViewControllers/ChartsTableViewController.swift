@@ -59,7 +59,7 @@ class ChartsTableViewController: UITableViewController {
   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     let chartData = data[indexPath.row]
     let vc = ChartTableViewController(style: .grouped)
-    vc.data = ChartPresentationData(chartData)
+//    vc.data = ChartPresentationData(chartData)
     navigationController?.pushViewController(vc, animated: true)
   }
 }

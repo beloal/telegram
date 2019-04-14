@@ -24,10 +24,10 @@
             </objects>
             <point key="canvasLocation" x="-35" y="77"/>
         </scene>
-        <!--Charts Table View Controller-->
+        <!--Chart Table View Controller-->
         <scene sceneID="MYW-RI-nIP">
             <objects>
-                <tableViewController id="pnS-7B-w9j" customClass="ChartsTableViewController" customModule="Charts" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController id="pnS-7B-w9j" customClass="ChartTableViewController" customModule="Charts" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="18" sectionFooterHeight="18" id="aK1-Om-kPJ">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

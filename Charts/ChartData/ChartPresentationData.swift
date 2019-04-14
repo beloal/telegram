@@ -256,7 +256,7 @@ class StackedPathBuilder: IChartPathBuilder {
       }
       line.minY = 0
       line.maxY = u
-      line.path = makeBarPreviewPath(line: line, bottomLine: prevVisibleLine)
+      line.path = makeBarPath(line: line, bottomLine: prevVisibleLine)
       line.previewPath = makeBarPreviewPath(line: line, bottomLine: prevVisibleLine)
       if line.isVisible { prevVisibleLine = line }
     }
