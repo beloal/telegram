@@ -15,6 +15,19 @@ fileprivate class ChartYAxisInnerView: UIView {
   var labels: [UILabel] = []
   var alignment: ChartYAxisViewAlignment = .left
   var textColor: UIColor?
+  var gridColor: UIColor = UIColor(white: 0, alpha: 0.3) {
+    didSet {
+      if textColor == nil {
+        labels.forEach { $0.textColor = gridColor }
+      }
+    }
+  }
+  
+  var gridLineColor: UIColor = UIColor.white {
+    didSet {
+      shapeLayer.strokeColor = gridLineColor.cgColor
+    }
+  }
 
   private var path: UIBezierPath?
 
@@ -33,7 +46,7 @@ fileprivate class ChartYAxisInnerView: UIView {
   func makeLabel(y: Int) -> UILabel {
     let label = UILabel()
     label.font = ChartYAxisInnerView.font
-    label.textColor = textColor ?? UIColor(white: 0, alpha: 0.3)
+    label.textColor = textColor ?? gridColor
     label.text = "\(y)"
     label.frame = CGRect(x: 0, y: 0, width: 100, height: 15)
     label.transform = CGAffineTransform.identity.scaledBy(x: 1, y: -1)
@@ -63,7 +76,7 @@ fileprivate class ChartYAxisInnerView: UIView {
 
       path = p
       shapeLayer.fillColor = UIColor.clear.cgColor
-      shapeLayer.strokeColor = UIColor(white: 0, alpha: 0.2).cgColor
+      shapeLayer.strokeColor = gridLineColor.cgColor
       shapeLayer.lineWidth = CGFloat(1) / UIScreen.main.scale
     }
     updateGrid()
@@ -136,6 +149,18 @@ class ChartYAxisView: UIView {
   var alignment: ChartYAxisViewAlignment = .left
   var textColor: UIColor?
 
+  var gridColor: UIColor = UIColor(white: 0, alpha: 0.3) {
+    didSet {
+      gridView?.gridColor = gridColor
+    }
+  }
+
+  var gridLineColor: UIColor = UIColor(white: 0, alpha: 0.3) {
+    didSet {
+      gridView?.gridLineColor = gridLineColor
+    }
+  }
+
   override var frame: CGRect {
     didSet {
       gridView?.updateGrid()
@@ -148,6 +173,8 @@ class ChartYAxisView: UIView {
     let gv = ChartYAxisInnerView()
     gv.alignment = alignment
     gv.textColor = textColor
+    gv.gridColor = gridColor
+    gv.gridLineColor = gridLineColor
     gv.frame = bounds
     gv.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     addSubview(gv)

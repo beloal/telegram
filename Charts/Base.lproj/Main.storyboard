@@ -24,7 +24,7 @@
             </objects>
             <point key="canvasLocation" x="-35" y="77"/>
         </scene>
-        <!--Chart Table View Controller-->
+        <!--Staistics-->
         <scene sceneID="MYW-RI-nIP">
             <objects>
                 <tableViewController id="pnS-7B-w9j" customClass="ChartTableViewController" customModule="Charts" customModuleProvider="target" sceneMemberID="viewController">
@@ -32,12 +32,13 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                        <color key="separatorColor" red="0.10196078431372549" green="0.13333333333333333" blue="0.17254901960784313" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                         <connections>
                             <outlet property="dataSource" destination="pnS-7B-w9j" id="czr-Tp-w4z"/>
                             <outlet property="delegate" destination="pnS-7B-w9j" id="gEQ-fT-cUY"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" id="vtP-lG-Sl8"/>
+                    <navigationItem key="navigationItem" title="Staistics" id="vtP-lG-Sl8"/>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ukk-dv-ItT" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

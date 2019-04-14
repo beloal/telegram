@@ -7,6 +7,12 @@ fileprivate class ChartXAxisInnerView: UIView {
   var steps: [String] = []
   var labels: [UILabel] = []
 
+  var gridColor: UIColor = UIColor(white: 0, alpha: 0.3) {
+    didSet {
+      labels.forEach { $0.textColor = gridColor }
+    }
+  }
+
   override var frame: CGRect {
     didSet {
       if upperBound > 0 && lowerBound > 0 {
@@ -18,7 +24,7 @@ fileprivate class ChartXAxisInnerView: UIView {
   func makeLabel(text: String) -> UILabel {
     let label = UILabel()
     label.font = font
-    label.textColor = UIColor(white: 0, alpha: 0.3)
+    label.textColor = gridColor
     label.text = text
     label.frame = CGRect(x: 0, y: 0, width: 50, height: 15)
     return label
@@ -59,6 +65,12 @@ class ChartXAxisView: UIView {
 
   var values: [String] = []
 
+  var gridColor: UIColor = UIColor(white: 0, alpha: 0.3) {
+    didSet {
+      labelsView?.gridColor = gridColor
+    }
+  }
+
   private var labelsView: ChartXAxisInnerView?
 
   func setBounds(lower: Int, upper: Int) {
@@ -75,6 +87,7 @@ class ChartXAxisView: UIView {
 
     let lv = ChartXAxisInnerView()
     lv.frame = bounds
+    lv.gridColor = gridColor
     lv.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     addSubview(lv)
 

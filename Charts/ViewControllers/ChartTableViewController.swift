@@ -20,10 +20,18 @@ class ChartTableViewController: UITableViewController {
   var chartCell: ChartTableViewCell!
 
   var cells: [ChartTableViewCell] = []
+  var themeBarItem: UIBarButtonItem!
 
   override func viewDidLoad() {
     super.viewDidLoad()
 
+    themeBarItem = UIBarButtonItem(title: Theme.isNightTheme ? "Day Mode" : "Night Mode",
+                                   style: .plain,
+                                   target: self,
+                                   action: #selector(onThemeChange(_:)))
+    self.navigationItem.rightBarButtonItem = themeBarItem
+
+//    view.backgroundColor = Theme.currentTheme.background
     tableView.register(ChartTableViewCell.self, forCellReuseIdentifier: "ChartCell")
     tableView.register(UITableViewCell.self, forCellReuseIdentifier: "LineCell")
 
@@ -47,7 +55,34 @@ class ChartTableViewController: UITableViewController {
       cell.chartData = $0
       cells.append(cell)
     }
-}
+
+    updateColors()
+  }
+
+  func updateColors() {
+    let theme = Theme.currentTheme
+    tableView.backgroundColor = theme.background
+    tableView.separatorColor = theme.gridLine
+    tableView.visibleCells.forEach {
+      $0.backgroundColor = theme.chartBackground
+      $0.textLabel?.textColor = theme.black
+    }
+    cells.forEach {
+      $0.backgroundColor = theme.chartBackground
+      $0.chartView.previewSelectorColor = theme.previewSelector
+      $0.chartView.previewTintColor = theme.previewTint
+      $0.chartView.gridTextColor = theme.gridText
+      $0.chartView.gridLineColor = theme.gridLine
+      $0.chartView.headerTextColor = theme.black
+    }
+    self.navigationController?.navigationBar.barStyle = theme.barStyle
+    themeBarItem.title = Theme.isNightTheme ? "Day Mode" : "Night Mode"
+  }
+
+  @objc func onThemeChange(_ sender: AnyObject) {
+    Theme.isNightTheme = !Theme.isNightTheme
+    updateColors()
+  }
 
   // MARK: - Table view data source
 
@@ -70,6 +105,8 @@ class ChartTableViewController: UITableViewController {
       let chartLine = data.lineAt(indexPath.row - 1)
       cell.textLabel?.text = chartLine.name
       cell.imageView?.image = chartLine.color.image()
+      cell.backgroundColor = Theme.currentTheme.chartBackground
+      cell.textLabel?.textColor = Theme.currentTheme.black
       return cell
     }
   }

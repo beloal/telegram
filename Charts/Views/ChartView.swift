@@ -23,6 +23,37 @@ class ChartView: UIView {
   let chartInfoView = ChartInfoView()
   var lineViews: [ChartLineView] = []
 
+  var previewSelectorColor: UIColor = UIColor.white {
+    didSet {
+      chartPreviewView.selectorColor = previewSelectorColor
+    }
+  }
+
+  var previewTintColor: UIColor = UIColor.clear {
+    didSet {
+      chartPreviewView.selectorTintColor = previewTintColor
+    }
+  }
+
+  var headerTextColor: UIColor = UIColor.white {
+    didSet {
+      headerView.datesLabel.textColor = headerTextColor
+    }
+  }
+
+  var gridTextColor: UIColor = UIColor(white: 0, alpha: 0.2) {
+    didSet {
+      xAxisView.gridColor = gridTextColor
+      yAxisLeftView.gridColor = gridTextColor
+    }
+  }
+
+  var gridLineColor: UIColor = UIColor(white: 0, alpha: 0.2) {
+    didSet {
+      yAxisLeftView.gridLineColor = gridLineColor
+    }
+  }
+
   weak var headerUpdateTimer: Timer?
 
   var rasterize = false {
@@ -86,6 +117,10 @@ class ChartView: UIView {
   }
 
   private func setup() {
+    headerView.datesLabel.textColor = headerTextColor
+    xAxisView.gridColor = gridTextColor
+    yAxisLeftView.gridColor = gridTextColor
+    yAxisRightView.gridColor = gridTextColor
     addSubview(headerView)
 
     addSubview(chartsContainerView)

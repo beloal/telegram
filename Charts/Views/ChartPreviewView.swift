@@ -68,6 +68,18 @@ class ChartPreviewView: UIView {
   let tintView = TintView()
   var previewViews: [ChartLineView] = []
 
+  var selectorColor: UIColor = UIColor.white {
+    didSet {
+      viewPortView.backgroundColor = selectorColor
+    }
+  }
+
+  var selectorTintColor: UIColor = UIColor.clear {
+    didSet {
+      tintView.backgroundColor = selectorTintColor
+    }
+  }
+
   var minX = 0
   var maxX = 0
   weak var delegate: ChartPreviewViewDelegate?
@@ -133,12 +145,12 @@ class ChartPreviewView: UIView {
       b])
 
     tintView.frame = bounds
-    tintView.backgroundColor = UIColor(hexString: "#E2EEF9")?.withAlphaComponent(0.6)
+    tintView.backgroundColor = selectorTintColor
     tintView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     addSubview(tintView)
 
     viewPortView.tintView = tintView
-    viewPortView.backgroundColor = UIColor(hexString: "#C0D1E1")// UIColor(white: 0, alpha: 0.05)
+    viewPortView.backgroundColor = selectorColor// UIColor(white: 0, alpha: 0.05)
     viewPortView.translatesAutoresizingMaskIntoConstraints = false
     addSubview(viewPortView)
 
