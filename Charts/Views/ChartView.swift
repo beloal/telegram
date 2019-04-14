@@ -1,6 +1,11 @@
 import UIKit
 
 let kAnimationDuration = 0.3
+let df: DateFormatter = {
+  let f = DateFormatter()
+  f.dateStyle = .medium
+  return f
+}()
 
 enum ChartAnimation: TimeInterval {
   case none = 0.0
@@ -9,6 +14,7 @@ enum ChartAnimation: TimeInterval {
 }
 
 class ChartView: UIView {
+  let headerView = ChartHeaderView()
   let chartsContainerView = UIView()
   let chartPreviewView = ChartPreviewView()
   let yAxisLeftView = ChartYAxisView()
@@ -16,6 +22,8 @@ class ChartView: UIView {
   let xAxisView = ChartXAxisView()
   let chartInfoView = ChartInfoView()
   var lineViews: [ChartLineView] = []
+
+  weak var headerUpdateTimer: Timer?
 
   var chartData: ChartPresentationData! {
     didSet {
@@ -75,6 +83,8 @@ class ChartView: UIView {
   }
 
   private func setup() {
+    addSubview(headerView)
+
     addSubview(chartsContainerView)
     chartsContainerView.clipsToBounds = true
 
@@ -86,7 +96,10 @@ class ChartView: UIView {
 
   override func layoutSubviews() {
     super.layoutSubviews()
-    let chartsFrame = CGRect(x: bounds.minX, y: bounds.minY, width: bounds.width, height: bounds.height - 70)
+    let headerFrame = CGRect(x: bounds.minX, y: bounds.minY, width: bounds.width, height: 35)
+    headerView.frame = headerFrame
+
+    let chartsFrame = CGRect(x: bounds.minX, y: bounds.minY + 35, width: bounds.width, height: bounds.height - 105)
     chartsContainerView.frame = chartsFrame
 
     let xAxisFrame = CGRect(x: bounds.minX, y: bounds.height - 70, width: bounds.width, height: CGFloat(70 - 44))
@@ -177,8 +190,19 @@ class ChartView: UIView {
 
 extension ChartView: ChartPreviewViewDelegate {
   func chartPreviewView(_ view: ChartPreviewView, didChangeMinX minX: Int, maxX: Int) {
+
     xAxisView.setBounds(lower: minX, upper: maxX)
     updateCharts(animationStyle: .interactive)
+
+    if let timer = headerUpdateTimer {
+      timer.invalidate()
+    }
+
+    headerUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false, block: { _ in
+      let date1 = self.chartData.dateAt(minX)
+      let date2 = self.chartData.dateAt(maxX)
+      self.headerView.datesLabel.text = "\(df.string(from: date1)) - \(df.string(from: date2))"
+    })
   }
 }
 
