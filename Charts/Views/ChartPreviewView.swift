@@ -32,6 +32,7 @@ class ChartPreviewView: UIView {
       for i in 0..<chartData.linesCount {
         let line = chartData.lineAt(i)
         let v = ChartLineView()
+        v.isPreview = true
         v.chartLine = line
         v.frame = previewContainerView.bounds
         v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -42,7 +43,9 @@ class ChartPreviewView: UIView {
         }
         previewViews.append(v)
       }
-      previewViews.forEach { $0.setY(min: chartData.lower, max: chartData.upper) }
+      if chartData.type != .yScaled {
+        previewViews.forEach { $0.setY(min: chartData.lower, max: chartData.upper) }
+      }
       let count = chartData.pointsCount - 1
       minX = count - count / 5
       maxX = count
@@ -51,7 +54,9 @@ class ChartPreviewView: UIView {
   }
 
   func setLineVisible(_ visible: Bool, atIndex index: Int) {
-    previewViews.forEach { $0.setY(min: chartData.lower, max: chartData.upper, animationStyle: .animated) }
+    if chartData.type != .yScaled {
+      previewViews.forEach { $0.setY(min: chartData.lower, max: chartData.upper, animationStyle: .animated) }
+    }
     let pv = previewViews[index]
     UIView.animate(withDuration: kAnimationDuration) {
       pv.alpha = visible ? 1 : 0

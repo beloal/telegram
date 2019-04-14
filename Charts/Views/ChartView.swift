@@ -11,7 +11,8 @@ enum ChartAnimation: TimeInterval {
 class ChartView: UIView {
   let chartsContainerView = UIView()
   let chartPreviewView = ChartPreviewView()
-  let yAxisView = ChartYAxisView()
+  let yAxisLeftView = ChartYAxisView()
+  var yAxisRightView = ChartYAxisView()
   let xAxisView = ChartXAxisView()
   let chartInfoView = ChartInfoView()
   var lineViews: [ChartLineView] = []
@@ -21,8 +22,6 @@ class ChartView: UIView {
       chartData.delegate = self
       lineViews.forEach { $0.removeFromSuperview() }
       lineViews.removeAll()
-      let lower = chartData.lower
-      var upper = chartData.upper
       for i in 0..<chartData.linesCount {
         let line = chartData.lineAt(i)
         let v = ChartLineView()
@@ -38,24 +37,26 @@ class ChartView: UIView {
         lineViews.append(v)
       }
 
-      yAxisView.frame = chartsContainerView.bounds
-      yAxisView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-      yAxisView.transform = CGAffineTransform.identity.scaledBy(x: 1, y: -1)
-      chartsContainerView.addSubview(yAxisView)
+      yAxisLeftView.frame = chartsContainerView.bounds
+      yAxisLeftView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+      yAxisLeftView.transform = CGAffineTransform.identity.scaledBy(x: 1, y: -1)
+      chartsContainerView.addSubview(yAxisLeftView)
+
+      if chartData.type == .yScaled {
+        yAxisLeftView.textColor = chartData.lineAt(0).color
+        yAxisRightView.textColor = chartData.lineAt(1).color
+        yAxisRightView.alignment = .right
+        yAxisRightView.frame = chartsContainerView.bounds
+        yAxisRightView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        yAxisRightView.transform = CGAffineTransform.identity.scaledBy(x: 1, y: -1)
+        chartsContainerView.addSubview(yAxisRightView)
+      }
 
       chartInfoView.frame = chartsContainerView.bounds
       chartInfoView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
       chartInfoView.delegate = self
       chartsContainerView.addSubview(chartInfoView)
 
-      let step = (upper - lower) / 6 + 1
-      upper = lower + step * 6
-      var steps: [Int] = []
-      for i in 0..<6 {
-        steps.append(lower + step * i)
-      }
-
-      yAxisView.setBounds(lower: lower, upper: upper, steps: steps)
       xAxisView.values = chartData.labels
       chartPreviewView.chartData = chartData
       xAxisView.setBounds(lower: chartPreviewView.minX, upper: chartPreviewView.maxX)
@@ -95,16 +96,62 @@ class ChartView: UIView {
     chartPreviewView.frame = previewFrame
   }
 
+  func updateYScaled(animationStyle: ChartAnimation = .none) {
+    for i in 0..<chartData.linesCount {
+      var lower = Int.max
+      var upper = Int.min
+      guard chartData.isLineVisibleAt(i) else { continue }
+      let line = chartData.lineAt(i)
+      let subrange = line.aggregatedValues[xAxisView.lowerBound...xAxisView.upperBound]
+      subrange.forEach {
+        upper = Int(max($0, CGFloat(upper)))
+        lower = Int(min($0, CGFloat(lower)))
+      }
+
+      let step = (upper - lower) / 6 + 1
+      upper = lower + step * 6
+      var steps: [Int] = []
+      for i in 0..<6 {
+        steps.append(lower + step * i)
+      }
+
+      let yAxisView = i == 0 ? yAxisLeftView : yAxisRightView
+      if (yAxisView.upperBound != upper || yAxisView.lowerBound != lower) {
+        yAxisView.setBounds(lower: lower, upper: upper, steps: steps, animationStyle: animationStyle)
+      }
+
+      let lineView = lineViews[i]
+      lineView.setViewport(minX: xAxisView.lowerBound,
+                           maxX: xAxisView.upperBound,
+                           minY: lower,
+                           maxY: upper,
+                           animationStyle: animationStyle)
+
+    }
+  }
+
   func updateCharts(animationStyle: ChartAnimation = .none) {
-    var lower = chartData.lower
+    if chartData.type == .yScaled {
+      updateYScaled(animationStyle: animationStyle)
+      return
+    }
+
+    var lower = Int.max
     var upper = Int.min
 
     for i in 0..<chartData.linesCount {
       guard chartData.isLineVisibleAt(i) else { continue }
       let line = chartData.lineAt(i)
-      lower = min(line.minY, lower)
+      if line.type != .line {
+        lower = min(line.minY, lower)
+      }
       let subrange = line.aggregatedValues[xAxisView.lowerBound...xAxisView.upperBound]
-      subrange.forEach { upper = max($0, upper) }
+      subrange.forEach {
+        upper = Int(max($0, CGFloat(upper)))
+        if line.type == .line {
+          lower = Int(min($0, CGFloat(lower)))
+        }
+      }
     }
 
     let step = (upper - lower) / 6 + 1
@@ -114,8 +161,8 @@ class ChartView: UIView {
       steps.append(lower + step * i)
     }
 
-    if (yAxisView.upperBound != upper) {
-      yAxisView.setBounds(lower: lower, upper: upper, steps: steps, animationStyle: animationStyle)
+    if yAxisLeftView.upperBound != upper || yAxisLeftView.lowerBound != lower {
+      yAxisLeftView.setBounds(lower: lower, upper: upper, steps: steps, animationStyle: animationStyle)
     }
 
     lineViews.forEach {
@@ -148,7 +195,15 @@ extension ChartView: ChartInfoViewDelegate {
       guard chartData.isLineVisibleAt(i) else { continue }
       let line = chartData.lineAt(i)
       let y = line.values[x]
-      let py = chartsContainerView.bounds.height * CGFloat(y - yAxisView.lowerBound) / CGFloat(yAxisView.upperBound - yAxisView.lowerBound)
+      let yAxisView: ChartYAxisView
+      if chartData.type == .yScaled && i == 1 {
+        yAxisView = yAxisRightView
+      } else {
+        yAxisView = yAxisLeftView
+      }
+
+      let py = chartsContainerView.bounds.height * CGFloat(y - yAxisView.lowerBound) /
+        CGFloat(yAxisView.upperBound - yAxisView.lowerBound)
       result.append(ChartLineInfo(name: line.name,
                                   color: line.color,
                                   point: convert(CGPoint(x: px, y: py), to: view),
@@ -166,6 +221,10 @@ extension ChartView: ChartPresentationDataDelegate {
     let lv = lineViews[index]
     UIView.animate(withDuration: kAnimationDuration) {
       lv.alpha = visible ? 1 : 0
+    }
+    if data.type == .yScaled {
+      let yAxisView = index == 0 ? yAxisLeftView : yAxisRightView
+      yAxisView.setLabelsVisible(visible)
     }
   }
 }

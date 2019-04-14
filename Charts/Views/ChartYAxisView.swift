@@ -1,5 +1,10 @@
 import UIKit
 
+enum ChartYAxisViewAlignment {
+  case left
+  case right
+}
+
 fileprivate class ChartYAxisInnerView: UIView {
   override class var layerClass: AnyClass { return CAShapeLayer.self }
 
@@ -8,6 +13,8 @@ fileprivate class ChartYAxisInnerView: UIView {
   var upperBound = 0
   var steps: [Int] = []
   var labels: [UILabel] = []
+  var alignment: ChartYAxisViewAlignment = .left
+  var textColor: UIColor?
 
   private var path: UIBezierPath?
 
@@ -26,9 +33,9 @@ fileprivate class ChartYAxisInnerView: UIView {
   func makeLabel(y: Int) -> UILabel {
     let label = UILabel()
     label.font = ChartYAxisInnerView.font
-    label.textColor = UIColor(white: 0, alpha: 0.3)
+    label.textColor = textColor ?? UIColor(white: 0, alpha: 0.3)
     label.text = "\(y)"
-    label.sizeToFit()
+    label.frame = CGRect(x: 0, y: 0, width: 100, height: 15)
     label.transform = CGAffineTransform.identity.scaledBy(x: 1, y: -1)
     return label
   }
@@ -40,20 +47,25 @@ fileprivate class ChartYAxisInnerView: UIView {
     labels.forEach { $0.removeFromSuperview() }
     labels.removeAll()
 
-    let p = UIBezierPath()
     for step in steps {
-      p.move(to: CGPoint(x: 0, y: step))
-      p.addLine(to: CGPoint(x: 10000, y: step))
       let label = makeLabel(y: step)
+      label.textAlignment = alignment == .left ? .left : .right
       labels.append(label)
       addSubview(label)
     }
 
-    path = p
-    shapeLayer.fillColor = UIColor.clear.cgColor
-    shapeLayer.strokeColor = UIColor(white: 0, alpha: 0.2).cgColor
-    shapeLayer.lineWidth = CGFloat(1) / UIScreen.main.scale
+    if alignment == .left {
+      let p = UIBezierPath()
+      for step in steps {
+        p.move(to: CGPoint(x: 0, y: step))
+        p.addLine(to: CGPoint(x: 10000, y: step))
+      }
 
+      path = p
+      shapeLayer.fillColor = UIColor.clear.cgColor
+      shapeLayer.strokeColor = UIColor(white: 0, alpha: 0.2).cgColor
+      shapeLayer.lineWidth = CGFloat(1) / UIScreen.main.scale
+    }
     updateGrid()
   }
 
@@ -64,7 +76,16 @@ fileprivate class ChartYAxisInnerView: UIView {
   }
 
   func updateGrid(animationStyle: ChartAnimation = .none) {
-    guard let realPath = path?.copy() as? UIBezierPath else { return }
+    guard let realPath = path?.copy() as? UIBezierPath else {
+      if animationStyle != .none {
+        UIView.animate(withDuration: animationStyle.rawValue) {
+          self.updateLabels()
+        }
+      } else {
+        updateLabels()
+      }
+      return
+    }
 
     let yScale = (bounds.height) / CGFloat(upperBound - lowerBound)
     let yTranslate = (bounds.height) * CGFloat(-lowerBound) / CGFloat(upperBound - lowerBound)
@@ -103,8 +124,8 @@ fileprivate class ChartYAxisInnerView: UIView {
       let y = bounds.height * CGFloat(steps[i] - lowerBound) / CGFloat(upperBound - lowerBound)
       let l = labels[i]
       var f = l.frame
-      f.origin = CGPoint(x: 0, y: y)
-      l.frame = f.integral
+      f.origin = CGPoint(x: alignment == .left ? 0 : bounds.width - f.width, y: y)
+      l.frame = f//.integral
     }
   }
 }
@@ -112,6 +133,8 @@ fileprivate class ChartYAxisInnerView: UIView {
 class ChartYAxisView: UIView {
   var lowerBound = 0
   var upperBound = 0
+  var alignment: ChartYAxisViewAlignment = .left
+  var textColor: UIColor?
 
   override var frame: CGRect {
     didSet {
@@ -123,19 +146,26 @@ class ChartYAxisView: UIView {
 
   func setBounds(lower: Int, upper: Int, steps: [Int], animationStyle: ChartAnimation = .none) {
     let gv = ChartYAxisInnerView()
+    gv.alignment = alignment
+    gv.textColor = textColor
     gv.frame = bounds
     gv.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     addSubview(gv)
 
     if let gridView = gridView {
-      gv.setBounds(lower: lowerBound, upper: upperBound, steps: steps)
-      gv.alpha = 0
-      gv.updateBounds(lower: lower, upper:upper, animationStyle: animationStyle)
-      gridView.updateBounds(lower: lower, upper:upper, animationStyle: animationStyle)
-      UIView.animate(withDuration: animationStyle.rawValue, animations: {
-        gv.alpha = 1
-        gridView.alpha = 0
-      }) { _ in
+      if animationStyle == .animated {
+        gv.setBounds(lower: lowerBound, upper: upperBound, steps: steps)
+        gv.alpha = 0
+        gv.updateBounds(lower: lower, upper:upper, animationStyle: animationStyle)
+        gridView.updateBounds(lower: lower, upper:upper, animationStyle: animationStyle)
+        UIView.animate(withDuration: animationStyle.rawValue, animations: {
+          gv.alpha = 1
+          gridView.alpha = 0
+        }) { _ in
+          gridView.removeFromSuperview()
+        }
+      } else {
+        gv.setBounds(lower: lower, upper: upper, steps: steps)
         gridView.removeFromSuperview()
       }
     } else {
@@ -145,5 +175,13 @@ class ChartYAxisView: UIView {
     gridView = gv
     lowerBound = lower
     upperBound = upper
+  }
+
+  func setLabelsVisible(_ visible: Bool) {
+    UIView.animate(withDuration: kAnimationDuration) {
+      self.gridView?.labels.forEach {
+        $0.alpha = visible ? 1 : 0
+      }
+    }
   }
 }

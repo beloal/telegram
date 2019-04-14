@@ -8,6 +8,8 @@ class ChartLineView: UIView {
   private var minY = 0
   private var maxY = 0
 
+  var isPreview = false
+
   var lineWidth: CGFloat = 1 {
     didSet {
       shapeLayer.lineWidth = lineWidth
@@ -72,7 +74,8 @@ class ChartLineView: UIView {
   }
 
   private func updateGraph(animationStyle: ChartAnimation = .none) {
-    guard let realPath = chartLine?.path.copy() as? UIBezierPath else { return }
+    let p = isPreview ? chartLine.previewPath : chartLine.path
+    guard let realPath = p.copy() as? UIBezierPath else { return }
 
     let xScale = bounds.width / CGFloat(maxX - minX)
     let xTranslate = -bounds.width * CGFloat(minX) / CGFloat(maxX - minX)

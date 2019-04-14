@@ -20,7 +20,7 @@ fileprivate class ChartXAxisInnerView: UIView {
     label.font = font
     label.textColor = UIColor(white: 0, alpha: 0.3)
     label.text = text
-    label.sizeToFit()
+    label.frame = CGRect(x: 0, y: 0, width: 50, height: 15)
     return label
   }
 
