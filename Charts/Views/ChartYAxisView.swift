@@ -125,7 +125,7 @@ fileprivate class ChartYAxisInnerView: UIView {
       let l = labels[i]
       var f = l.frame
       f.origin = CGPoint(x: alignment == .left ? 0 : bounds.width - f.width, y: y)
-      l.frame = f//.integral
+      l.frame = f.integral
     }
   }
 }

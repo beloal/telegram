@@ -1,6 +1,6 @@
 import UIKit
 
-fileprivate extension UIColor {
+extension UIColor {
   convenience init?(hexString: String) {
     let nsString = hexString as NSString
     let rs = nsString.substring(with: NSMakeRange(1, 2))

@@ -4,13 +4,68 @@ protocol ChartPreviewViewDelegate: AnyObject {
   func chartPreviewView(_ view: ChartPreviewView, didChangeMinX minX: Int, maxX: Int)
 }
 
+class TintView: UIView {
+  let maskLayer = CAShapeLayer()
+
+  override init(frame: CGRect = .zero) {
+    super.init(frame: frame)
+    maskLayer.fillRule = .evenOdd
+    layer.mask = maskLayer
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError()
+  }
+
+  func updateViewport(_ viewport: CGRect) {
+    let cornersMask = UIBezierPath(roundedRect: bounds, cornerRadius: 5)
+    let rectMask = UIBezierPath(rect: viewport.insetBy(dx: 11, dy: 1))
+    let result = UIBezierPath()
+    result.append(cornersMask)
+    result.append(rectMask)
+    result.usesEvenOddFillRule = true
+    maskLayer.path = result.cgPath
+  }
+}
+
+class ViewPortView: UIView {
+  let maskLayer = CAShapeLayer()
+  var tintView: TintView?
+
+  override init(frame: CGRect = .zero) {
+    super.init(frame: frame)
+    maskLayer.fillRule = .evenOdd
+    layer.mask = maskLayer
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError()
+  }
+
+  override var frame: CGRect {
+    didSet {
+      maskLayer.path = makeMaskPath().cgPath
+      tintView?.updateViewport(convert(bounds, to: tintView))
+    }
+  }
+
+  func makeMaskPath() -> UIBezierPath {
+    let cornersMask = UIBezierPath(roundedRect: bounds, cornerRadius: 5)
+    let rectMask = UIBezierPath(rect: bounds.insetBy(dx: 11, dy: 1))
+    let result = UIBezierPath()
+    result.append(cornersMask)
+    result.append(rectMask)
+    result.usesEvenOddFillRule = true
+    return result
+  }
+}
+
 class ChartPreviewView: UIView {
   let previewContainerView = UIView()
-  let viewPortView = UIView()
+  let viewPortView = ViewPortView()
   let leftBoundView = UIView()
   let rightBoundView = UIView()
-  let leftTintView = UIView()
-  let rightTintView = UIView()
+  let tintView = TintView()
   var previewViews: [ChartLineView] = []
 
   var minX = 0
@@ -66,26 +121,31 @@ class ChartPreviewView: UIView {
   override init(frame: CGRect) {
     super.init(frame: frame)
     previewContainerView.translatesAutoresizingMaskIntoConstraints = false
+    previewContainerView.layer.cornerRadius = 5
+    previewContainerView.clipsToBounds = true
     addSubview(previewContainerView)
     let t = previewContainerView.topAnchor.constraint(equalTo: topAnchor)
     let b = previewContainerView.bottomAnchor.constraint(equalTo: bottomAnchor)
     t.priority = .defaultHigh
     b.priority = .defaultHigh
-    t.constant = 3
-    b.constant = -3
+    t.constant = 1
+    b.constant = -1
     NSLayoutConstraint.activate([
       previewContainerView.leftAnchor.constraint(equalTo: leftAnchor),
       previewContainerView.rightAnchor.constraint(equalTo: rightAnchor),
       t,
       b])
 
-    viewPortView.backgroundColor = UIColor(white: 0, alpha: 0.05)
-    viewPortView.clipsToBounds = true
+    tintView.frame = bounds
+    tintView.backgroundColor = UIColor(hexString: "#E2EEF9")?.withAlphaComponent(0.6)
+    tintView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    addSubview(tintView)
+
+    viewPortView.tintView = tintView
+    viewPortView.backgroundColor = UIColor(hexString: "#C0D1E1")// UIColor(white: 0, alpha: 0.05)
     viewPortView.translatesAutoresizingMaskIntoConstraints = false
     addSubview(viewPortView)
 
-    leftBoundView.backgroundColor = UIColor(white: 0, alpha: 0.2)
-    rightBoundView.backgroundColor = UIColor(white: 0, alpha: 0.2)
     viewPortView.addSubview(leftBoundView)
     viewPortView.addSubview(rightBoundView)
 
