@@ -31,7 +31,6 @@ class ChartTableViewController: UITableViewController {
                                    action: #selector(onThemeChange(_:)))
     self.navigationItem.rightBarButtonItem = themeBarItem
 
-//    view.backgroundColor = Theme.currentTheme.background
     tableView.register(ChartTableViewCell.self, forCellReuseIdentifier: "ChartCell")
     tableView.register(UITableViewCell.self, forCellReuseIdentifier: "LineCell")
 
@@ -54,6 +53,7 @@ class ChartTableViewController: UITableViewController {
       let cell = ChartTableViewCell(style: .default, reuseIdentifier: "ChartCell")
       cell.chartData = $0
       cells.append(cell)
+      cell.chartView.maxWidth = UIScreen.main.bounds.width
     }
 
     updateColors()
@@ -91,8 +91,7 @@ class ChartTableViewController: UITableViewController {
   }
 
   override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    let data = chartsData[section]
-    return 1 + data.linesCount
+    return 1
   }
 
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -132,7 +131,7 @@ class ChartTableViewController: UITableViewController {
 
   override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
     if (indexPath.row == 0) {
-      return tableView.bounds.width
+      return cells[indexPath.section].chartView.height
     }
 
     return UITableView.automaticDimension

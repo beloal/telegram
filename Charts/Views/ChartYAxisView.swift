@@ -22,7 +22,7 @@ fileprivate class ChartYAxisInnerView: UIView {
       }
     }
   }
-  
+
   var gridLineColor: UIColor = UIColor.white {
     didSet {
       shapeLayer.strokeColor = gridLineColor.cgColor

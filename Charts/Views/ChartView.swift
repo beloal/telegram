@@ -22,6 +22,15 @@ class ChartView: UIView {
   let xAxisView = ChartXAxisView()
   let chartInfoView = ChartInfoView()
   var lineViews: [ChartLineView] = []
+  let chartSettingsView = ChartSettingsView()
+  var maxWidth: CGFloat = 0 {
+    didSet {
+      chartSettingsView.maxWidth = maxWidth
+    }
+  }
+  var height: CGFloat {
+    return 105 + 270 + chartSettingsView.height
+  }
 
   var previewSelectorColor: UIColor = UIColor.white {
     didSet {
@@ -103,6 +112,7 @@ class ChartView: UIView {
       xAxisView.setBounds(lower: chartPreviewView.minX, upper: chartPreviewView.maxX)
       updateCharts()
       updateHeader()
+      chartSettingsView.chartData = chartData
     }
   }
 
@@ -130,6 +140,7 @@ class ChartView: UIView {
     chartPreviewView.delegate = self
 
     addSubview(xAxisView)
+    addSubview(chartSettingsView)
   }
 
   override func layoutSubviews() {
@@ -137,14 +148,17 @@ class ChartView: UIView {
     let headerFrame = CGRect(x: bounds.minX, y: bounds.minY, width: bounds.width, height: 35)
     headerView.frame = headerFrame
 
-    let chartsFrame = CGRect(x: bounds.minX, y: bounds.minY + 35, width: bounds.width, height: bounds.height - 105)
+    let chartsFrame = CGRect(x: bounds.minX, y: bounds.minY + 35, width: bounds.width, height: 270)
     chartsContainerView.frame = chartsFrame
 
-    let xAxisFrame = CGRect(x: bounds.minX, y: bounds.height - 70, width: bounds.width, height: CGFloat(70 - 44))
+    let xAxisFrame = CGRect(x: bounds.minX, y: bounds.minY + 270 + 35, width: bounds.width, height: 26)
     xAxisView.frame = xAxisFrame
 
-    let previewFrame = CGRect(x: bounds.minX, y: bounds.height - 44, width: bounds.width, height: 44)
+    let previewFrame = CGRect(x: bounds.minX, y: bounds.minY + 270 + 35 + 26, width: bounds.width, height: 44)
     chartPreviewView.frame = previewFrame
+
+    let settingsViewFrame = CGRect(x: bounds.minX, y: bounds.minY + 270 + 35 + 26 + 44, width: bounds.width, height: chartSettingsView.height)
+    chartSettingsView.frame = settingsViewFrame
   }
 
   func updateYScaled(animationStyle: ChartAnimation = .none) {
