@@ -29,7 +29,7 @@ class ChartView: UIView {
     }
   }
   var height: CGFloat {
-    return 105 + 270 + chartSettingsView.height
+    return 105 + 270 + 16 + chartSettingsView.height
   }
 
   var previewSelectorColor: UIColor = UIColor.white {
@@ -79,6 +79,7 @@ class ChartView: UIView {
       for i in (0..<chartData.linesCount).reversed() {
         let line = chartData.lineAt(i)
         let v = ChartLineView()
+        v.clipsToBounds = true
         v.chartLine = line
         v.lineWidth = 2
         v.frame = chartsContainerView.bounds
@@ -134,7 +135,6 @@ class ChartView: UIView {
     addSubview(headerView)
 
     addSubview(chartsContainerView)
-    chartsContainerView.clipsToBounds = true
 
     addSubview(chartPreviewView)
     chartPreviewView.delegate = self

@@ -110,24 +110,24 @@ class ChartTableViewController: UITableViewController {
     }
   }
 
-  override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-    let result: String
-    switch section {
-    case 0:
-      result = "followers"
-    case 1:
-      result = "actions"
-    case 2:
-      result = "fruit"
-    case 3:
-      result = "views"
-    case 4:
-      result = "fruit proportion"
-    default:
-      result = ""
-    }
-    return result
-  }
+//  override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+//    let result: String
+//    switch section {
+//    case 0:
+//      result = "followers"
+//    case 1:
+//      result = "actions"
+//    case 2:
+//      result = "fruit"
+//    case 3:
+//      result = "views"
+//    case 4:
+//      result = "fruit proportion"
+//    default:
+//      result = ""
+//    }
+//    return result
+//  }
 
   override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
     if (indexPath.row == 0) {

@@ -34,11 +34,20 @@ fileprivate class ChartXAxisInnerView: UIView {
     lowerBound = lower
     upperBound = upper
     self.steps = steps
+
     labels.forEach { $0.removeFromSuperview() }
     labels.removeAll()
 
-    for step in steps {
+    for i in 0..<steps.count {
+      let step = steps[i]
       let label = makeLabel(text: step)
+      if i == 0 {
+        label.textAlignment = .left
+      } else if i == steps.count - 1 {
+        label.textAlignment = .right
+      } else {
+        label.textAlignment = .center
+      }
       labels.append(label)
       addSubview(label)
     }

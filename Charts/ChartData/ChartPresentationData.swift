@@ -133,8 +133,8 @@ extension IChartPathBuilder {
     for i in 0..<aggregatedValues.count {
       let x = CGFloat(i)
       let y = aggregatedValues[i] - CGFloat(line.minY)
-      path.addLine(to: CGPoint(x: x, y: y))
-      path.addLine(to: CGPoint(x: x + 1, y: y))
+      path.addLine(to: CGPoint(x: x - 0.5, y: y))
+      path.addLine(to: CGPoint(x: x + 0.5, y: y))
     }
     path.addLine(to: CGPoint(x: aggregatedValues.count, y: 0))
     path.close()
@@ -156,10 +156,37 @@ extension IChartPathBuilder {
     return path
   }
 
+  func makePercentLinePreviewPath(line: ChartPresentationLine, bottomLine: ChartPresentationLine?) -> UIBezierPath {
+    let path = UIBezierPath()
+    path.move(to: CGPoint(x: 0, y: 0))
+    var filter = LowPassFilter(value: 0, filterFactor: 0.3)
+
+    if !line.isVisible {
+      guard let bl = bottomLine else {
+        line.previewPath.apply(CGAffineTransform.identity.scaledBy(x: 1, y: 0))
+        return line.previewPath
+      }
+      return bl.previewPath
+    }
+
+    let step = 5
+    let aggregatedValues = line.aggregatedValues.enumerated().compactMap { $0 % step == 0 ? $1 : nil }
+    for i in 0..<aggregatedValues.count {
+      let x = CGFloat(i * step)
+      let y = aggregatedValues[i] - CGFloat(line.minY)
+      if i == 0 { filter.value = y } else { filter.update(newValue: y) }
+      path.addLine(to: CGPoint(x: x, y: filter.value))
+//      path.addLine(to: CGPoint(x: x, y: y))
+    }
+    path.addLine(to: CGPoint(x: aggregatedValues.count * step, y: 0))
+    path.close()
+    return path
+  }
+
+
   func makePercentLinePath(line: ChartPresentationLine, bottomLine: ChartPresentationLine?) -> UIBezierPath {
     let path = UIBezierPath()
     path.move(to: CGPoint(x: 0, y: 0))
-//    var filter = LowPassFilter(value: 0, filterFactor: 0.9)
 
     if !line.isVisible {
       guard let bl = bottomLine else {
@@ -173,8 +200,6 @@ extension IChartPathBuilder {
     for i in 0..<aggregatedValues.count {
       let x = CGFloat(i)
       let y = aggregatedValues[i] - CGFloat(line.minY)
-//      if i == 0 { filter.value = y } else { filter.update(newValue: y) }
-//      path.addLine(to: CGPoint(x: x, y: filter.value))
       path.addLine(to: CGPoint(x: x, y: y))
     }
     path.addLine(to: CGPoint(x: aggregatedValues.count, y: 0))
@@ -284,7 +309,7 @@ class PercentagePathBuilder: IChartPathBuilder {
     var prevVisibleLine: ChartPresentationLine? = nil
     lines.forEach {
       $0.path = makePercentLinePath(line: $0, bottomLine: prevVisibleLine)
-      $0.previewPath = $0.path
+      $0.previewPath = makePercentLinePreviewPath(line: $0, bottomLine: prevVisibleLine)
      if $0.isVisible { prevVisibleLine = $0 }
     }
   }
