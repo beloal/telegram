@@ -22,13 +22,15 @@ class ChartLineView: UIView {
       maxX = chartLine.values.count - 1
       minY = chartLine.minY
       maxY = chartLine.maxY
-      shapeLayer.strokeColor = chartLine.color.cgColor
       switch chartLine.type {
       case .line:
+        shapeLayer.strokeColor = chartLine.color.cgColor
         shapeLayer.fillColor = UIColor.clear.cgColor
+//        shapeLayer.lineJoin = .round
       case .bar:
         fallthrough
       case .area:
+        shapeLayer.strokeColor = UIColor.clear.cgColor
         shapeLayer.fillColor = chartLine.color.cgColor
       }
       shapeLayer.lineWidth = lineWidth

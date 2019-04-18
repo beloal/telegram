@@ -57,8 +57,8 @@ struct NightTheme: ITheme {
     black = UIColor.white
     previewSelector = UIColor(hexString: "#56626D")!
     previewTint = UIColor(hexString: "#18222D")!.withAlphaComponent(0.6)
-    gridLine = UIColor(hexString: "#8596AB")!.withAlphaComponent(0.2)
-    gridText = UIColor(hexString: "#8596AB")!
+    gridLine = UIColor(hexString: "#BACCE1")!.withAlphaComponent(0.2)
+    gridText = UIColor(hexString: "#BACCE1")!
     barMask = UIColor(hexString: "#212F3F")!.withAlphaComponent(0.5)
     background = UIColor(hexString: "#1A222C")!
     chartBackground = UIColor(hexString: "#242F3E")!

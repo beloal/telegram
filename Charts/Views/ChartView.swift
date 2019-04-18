@@ -44,9 +44,16 @@ class ChartView: UIView {
     }
   }
 
+  var maskColor: UIColor = UIColor.clear {
+    didSet {
+      chartInfoView.maskColor = maskColor
+    }
+  }
+
   var headerTextColor: UIColor = UIColor.white {
     didSet {
       headerView.datesLabel.textColor = headerTextColor
+      chartInfoView.textColor = headerTextColor
     }
   }
 
@@ -60,6 +67,12 @@ class ChartView: UIView {
   var gridLineColor: UIColor = UIColor(white: 0, alpha: 0.2) {
     didSet {
       yAxisLeftView.gridLineColor = gridLineColor
+    }
+  }
+
+  var bgColor: UIColor = UIColor.white {
+    didSet {
+      chartInfoView.bgColor = bgColor
     }
   }
 
@@ -106,6 +119,9 @@ class ChartView: UIView {
       chartInfoView.frame = chartsContainerView.bounds
       chartInfoView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
       chartInfoView.delegate = self
+      chartInfoView.bgColor = bgColor
+      chartInfoView.maskColor = maskColor
+      chartInfoView.textColor = headerTextColor
       chartsContainerView.addSubview(chartInfoView)
 
       xAxisView.values = chartData.labels
@@ -132,6 +148,10 @@ class ChartView: UIView {
     xAxisView.gridColor = gridTextColor
     yAxisLeftView.gridColor = gridTextColor
     yAxisRightView.gridColor = gridTextColor
+    yAxisLeftView.gridLineColor = gridTextColor
+    yAxisRightView.gridLineColor = gridTextColor
+    chartInfoView.bgColor = bgColor
+    chartInfoView.maskColor = maskColor
     addSubview(headerView)
 
     addSubview(chartsContainerView)
@@ -173,10 +193,10 @@ class ChartView: UIView {
         lower = Int(min($0, CGFloat(lower)))
       }
 
-      let step = (upper - lower) / 6 + 1
-      upper = lower + step * 6
+      let step = Int(ceil(CGFloat(upper - lower) / 5))
+      upper = lower + step * 5
       var steps: [Int] = []
-      for i in 0..<6 {
+      for i in 0..<5 {
         steps.append(lower + step * i)
       }
 
@@ -219,10 +239,10 @@ class ChartView: UIView {
       }
     }
 
-    let step = (upper - lower) / 6 + 1
-    upper = lower + step * 6
+    let step = Int(ceil(CGFloat(upper - lower) / 5))
+    upper = lower + step * 5
     var steps: [Int] = []
-    for i in 0..<6 {
+    for i in 0..<5 {
       steps.append(lower + step * i)
     }
 
@@ -284,10 +304,21 @@ extension ChartView: ChartInfoViewDelegate {
 
       let py = chartsContainerView.bounds.height * CGFloat(y - yAxisView.lowerBound) /
         CGFloat(yAxisView.upperBound - yAxisView.lowerBound)
+      var left: CGFloat? = nil
+      var right: CGFloat? = nil
+      if line.type == .bar {
+        let lx = (CGFloat(x - xAxisView.lowerBound) - 0.5) / CGFloat(xAxisView.upperBound - xAxisView.lowerBound) * bounds.width
+        let rx = (CGFloat(x - xAxisView.lowerBound) + 0.5) / CGFloat(xAxisView.upperBound - xAxisView.lowerBound) * bounds.width
+        left = chartsContainerView.convert(CGPoint(x: lx, y: 0), to: view).x
+        right = chartsContainerView.convert(CGPoint(x: rx, y: 0), to: view).x
+      }
+
       result.append(ChartLineInfo(name: line.name,
                                   color: line.color,
-                                  point: convert(CGPoint(x: px, y: py), to: view),
-                                  value: line.values[x]))
+                                  point: chartsContainerView.convert(CGPoint(x: px, y: py), to: view),
+                                  value: line.values[x],
+                                  left: left,
+                                  rigth: right))
     }
 
     return (date, result)
