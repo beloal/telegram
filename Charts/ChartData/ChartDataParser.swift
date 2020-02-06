@@ -6,9 +6,7 @@ extension UIColor {
     let rs = nsString.substring(with: NSMakeRange(1, 2))
     let gs = nsString.substring(with: NSMakeRange(3, 2))
     let bs = nsString.substring(with: NSMakeRange(5, 2))
-    guard let r = Int(rs, radix: 16),
-      let g = Int(gs, radix: 16),
-      let b = Int(bs, radix: 16) else {
+    guard let r = Int(rs, radix: 16), let g = Int(gs, radix: 16), let b = Int(bs, radix: 16) else {
         assertionFailure("Wrong color format")
         return nil
     }
@@ -19,11 +17,10 @@ extension UIColor {
 
 fileprivate struct ChartData: IChartData {
   var xAxisLabels: [String]
-  var xAxisDates: [Date]
+//  var xAxisDates: [Date]
   var lines: [IChartLine]
   var type: ChartType
 }
-
 
 fileprivate struct ChartLine: IChartLine {
   init(values: [Int], name: String, color: UIColor, type: ChartLineType) {
@@ -50,10 +47,11 @@ protocol IChartDataParser {
 }
 
 class ChartDataJsonParser: IChartDataParser {
-  let formatter = DateFormatter()
+  let formatter: IFormatter
 
-  init() {
-    formatter.dateFormat = "MMM dd"
+  init(formatter: IFormatter) {
+    self.formatter = formatter
+//    formatter.dateFormat = "MMM dd"
   }
 
   func parseData(_ data: Data) -> [IChartData]? {
@@ -87,7 +85,6 @@ class ChartDataJsonParser: IChartDataParser {
     }
 
     var x: [String]?
-    var xd: [Date]?
     var lines: [IChartLine] = []
 
     for column in columns {
@@ -98,8 +95,8 @@ class ChartDataJsonParser: IChartDataParser {
 
       switch type {
       case "x":
-        xd = column.values.map { Date(timeIntervalSince1970: TimeInterval($0 / 1000)) }
-        x = xd?.map { formatter.string(from: $0) }
+        x = column.values.map { formatter.string(from: $0 / 1000) }
+//        x = xd?.map { formatter.string(from: $0) }
       default:
         guard let name = names[column.key],
           let colorString = colors[column.key],
@@ -110,10 +107,14 @@ class ChartDataJsonParser: IChartDataParser {
         }
         let line = ChartLine(values: column.values, name: name, color: color, type: lineType)
         lines.append(line)
+        if lineType == .line {
+          let area = ChartLine(values: column.values, name: name, color: color.withAlphaComponent(0.5), type: .area)
+          lines.append(area)
+        }
         break
       }
     }
-    guard let xAxisLabels = x, let xAxisDates = xd, lines.count > 0 else {
+    guard let xAxisLabels = x, lines.count > 0 else {
       assertionFailure("Wrong data format")
       return nil
     }
@@ -124,7 +125,7 @@ class ChartDataJsonParser: IChartDataParser {
     if chartJson["stacked"] as? Bool ?? false { chartType = .stacked }
     if chartJson["percentage"] as? Bool ?? false { chartType = .percentage }
 
-    return ChartData(xAxisLabels: xAxisLabels, xAxisDates: xAxisDates, lines: lines, type: chartType)
+    return ChartData(xAxisLabels: xAxisLabels,/* xAxisDates: xAxisDates,*/ lines: lines, type: chartType)
   }
 
   private func parseColumnsJson(_ columnsJson: [[Any]]) -> [Column]? {

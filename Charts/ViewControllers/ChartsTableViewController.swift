@@ -16,26 +16,26 @@ class ChartsTableViewController: UITableViewController {
 //      return
 //    }
 
-    let parser: IChartDataParser = ChartDataJsonParser()
+//    let parser: IChartDataParser = ChartDataJsonParser()
 //    guard let chartData = parser.parseData(data) else { return }
 //    self.data = chartData
     tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
 
 
 
-    var charts: [IChartData] = []
-    guard var path = Bundle.main.resourceURL else { return }
-    path.appendPathComponent("contest")
-    try! FileManager.default.contentsOfDirectory(atPath: path.path).sorted().forEach {
-      guard let data = try? Data(contentsOf: path.appendingPathComponent($0).appendingPathComponent("overview.json")) else {
-        assertionFailure("Can't read file")
-        return
-      }
-
-      let cd = parser.parseData(data)![0]
-      charts.append(cd)
-    }
-    self.data = charts
+//    var charts: [IChartData] = []
+//    guard var path = Bundle.main.resourceURL else { return }
+//    path.appendPathComponent("contest")
+//    try! FileManager.default.contentsOfDirectory(atPath: path.path).sorted().forEach {
+//      guard let data = try? Data(contentsOf: path.appendingPathComponent($0).appendingPathComponent("overview.json")) else {
+//        assertionFailure("Can't read file")
+//        return
+//      }
+//
+//      let cd = parser.parseData(data)![0]
+//      charts.append(cd)
+//    }
+//    self.data = charts
   }
 
   // MARK: - Table view data source

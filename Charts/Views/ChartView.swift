@@ -80,7 +80,10 @@ class ChartView: UIView {
 
   var rasterize = false {
     didSet {
-      lineViews.forEach { $0.layer.shouldRasterize = rasterize }
+      lineViews.forEach {
+        $0.layer.shouldRasterize = rasterize
+        $0.layer.rasterizationScale = UIScreen.main.scale
+      }
     }
   }
 
@@ -260,9 +263,9 @@ class ChartView: UIView {
   }
 
   func updateHeader() {
-    let date1 = chartData.dateAt(xAxisView.lowerBound)
-    let date2 = chartData.dateAt(xAxisView.upperBound)
-    headerView.datesLabel.text = "\(df.string(from: date1)) - \(df.string(from: date2))"
+    let date1 = chartData.labelAt(xAxisView.lowerBound)
+    let date2 = chartData.labelAt(xAxisView.upperBound)
+    headerView.datesLabel.text = "\(date1) - \(date2)"// "\(df.string(from: date1)) - \(df.string(from: date2))"
   }
 }
 
@@ -283,18 +286,21 @@ extension ChartView: ChartPreviewViewDelegate {
 }
 
 extension ChartView: ChartInfoViewDelegate {
-  func chartInfoView(_ view: ChartInfoView, infoAtPointX pointX: CGFloat) -> (Date, [ChartLineInfo])? {
+  func chartInfoView(_ view: ChartInfoView, infoAtPointX pointX: CGFloat) -> (String, [ChartLineInfo])? {
     let p = convert(CGPoint(x: pointX, y: 0), from: view)
-    let x = Int(round((p.x / bounds.width) * CGFloat(xAxisView.upperBound - xAxisView.lowerBound))) + xAxisView.lowerBound
-    let px = CGFloat(x - xAxisView.lowerBound) / CGFloat(xAxisView.upperBound - xAxisView.lowerBound) * bounds.width
-    guard x < chartData.labels.count && x >= 0 else { return nil }
-    let date = chartData.dateAt(x)
+    let x = (p.x / bounds.width) * CGFloat(xAxisView.upperBound - xAxisView.lowerBound) + CGFloat(xAxisView.lowerBound)
+    let x1 = Int(floor(x))
+    let x2 = Int(ceil(x))
+//    let px = CGFloat(x - xAxisView.lowerBound) / CGFloat(xAxisView.upperBound - xAxisView.lowerBound) * bounds.width
+    guard x1 < chartData.labels.count && x >= 0 else { return nil }
+    let date = chartData.labelAt(x1)
 
     var result: [ChartLineInfo] = []
     for i in 0..<chartData.linesCount {
       guard chartData.isLineVisibleAt(i) else { continue }
       let line = chartData.lineAt(i)
-      let y = line.values[x]
+      let y1 = line.values[x1]
+      let y2 = line.values[x2]
       let yAxisView: ChartYAxisView
       if chartData.type == .yScaled && i == 1 {
         yAxisView = yAxisRightView
@@ -302,21 +308,26 @@ extension ChartView: ChartInfoViewDelegate {
         yAxisView = yAxisLeftView
       }
 
-      let py = chartsContainerView.bounds.height * CGFloat(y - yAxisView.lowerBound) /
-        CGFloat(yAxisView.upperBound - yAxisView.lowerBound)
+      let dx = x - CGFloat(x1)
+      let y = Int(dx * CGFloat(y2 - y1)) + y1
+      let py = round(chartsContainerView.bounds.height * CGFloat(y - yAxisView.lowerBound) /
+        CGFloat(yAxisView.upperBound - yAxisView.lowerBound))
       var left: CGFloat? = nil
       var right: CGFloat? = nil
       if line.type == .bar {
-        let lx = (CGFloat(x - xAxisView.lowerBound) - 0.5) / CGFloat(xAxisView.upperBound - xAxisView.lowerBound) * bounds.width
-        let rx = (CGFloat(x - xAxisView.lowerBound) + 0.5) / CGFloat(xAxisView.upperBound - xAxisView.lowerBound) * bounds.width
-        left = chartsContainerView.convert(CGPoint(x: lx, y: 0), to: view).x
-        right = chartsContainerView.convert(CGPoint(x: rx, y: 0), to: view).x
+//        let lx = (CGFloat(x - xAxisView.lowerBound) - 0.5) / CGFloat(xAxisView.upperBound - xAxisView.lowerBound) * bounds.width
+//        let rx = (CGFloat(x - xAxisView.lowerBound) + 0.5) / CGFloat(xAxisView.upperBound - xAxisView.lowerBound) * bounds.width
+        left = chartsContainerView.convert(CGPoint(x: x1, y: 0), to: view).x
+        right = chartsContainerView.convert(CGPoint(x: x2, y: 0), to: view).x
       }
 
+      let v1 = line.values[x1]
+      let v2 = line.values[x2]
+      let v = Int(dx * CGFloat(v2 - v1)) + v1
       result.append(ChartLineInfo(name: line.name,
                                   color: line.color,
-                                  point: chartsContainerView.convert(CGPoint(x: px, y: py), to: view),
-                                  value: line.values[x],
+                                  point: chartsContainerView.convert(CGPoint(x: p.x, y: py), to: view),
+                                  value: v,
                                   left: left,
                                   rigth: right))
     }

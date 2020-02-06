@@ -10,7 +10,7 @@ struct ChartLineInfo {
 }
 
 protocol ChartInfoViewDelegate: AnyObject {
-  func chartInfoView(_ view: ChartInfoView, infoAtPointX pointX: CGFloat) -> (Date, [ChartLineInfo])?
+  func chartInfoView(_ view: ChartInfoView, infoAtPointX pointX: CGFloat) -> (String, [ChartLineInfo])?
 }
 
 fileprivate class ChartPointInfoView: UIView {
@@ -27,7 +27,7 @@ fileprivate class ChartPointInfoView: UIView {
     }
   }
 
-  let dateFormatter = DateFormatter()
+//  let dateFormatter = DateFormatter()
   let font = UIFont.systemFont(ofSize: 12, weight: .medium)
   let lightFont = UIFont.systemFont(ofSize: 12)
 
@@ -37,7 +37,7 @@ fileprivate class ChartPointInfoView: UIView {
     layer.cornerRadius = 5
     clipsToBounds = true
     backgroundColor = UIColor(white: 0.9, alpha: 0.7)
-    dateFormatter.dateFormat = "EEE, dd MMM yyyy"
+//    dateFormatter.dateFormat = "EEE, dd MMM yyyy"
 
     dateLabel.textColor = textColor
     addSubview(dateLabel)
@@ -74,7 +74,7 @@ fileprivate class ChartPointInfoView: UIView {
     fatalError()
   }
 
-  func set(x: CGFloat, date: Date, points: [ChartLineInfo]) {
+  func set(x: CGFloat, date: String, points: [ChartLineInfo]) {
     valueLabels.forEach { $0.removeFromSuperview() }
     valueLabels.removeAll()
     nameLabels.forEach { $0.removeFromSuperview() }
@@ -96,17 +96,17 @@ fileprivate class ChartPointInfoView: UIView {
       nameLabels.append(nl)
       nameStack.addArrangedSubview(nl)
     }
-    dateLabel.text = dateFormatter.string(from: date)
+    dateLabel.text = date// dateFormatter.string(from: date)
   }
 
-  func update(x: CGFloat, date: Date, points: [ChartLineInfo]) {
+  func update(x: CGFloat, date: String, points: [ChartLineInfo]) {
     for i in 0..<valueLabels.count {
       let l = valueLabels[i]
       l.text = String(points[i].value)
       let nl = nameLabels[i]
       nl.text = points[i].name
     }
-    dateLabel.text = dateFormatter.string(from: date)
+    dateLabel.text = date// dateFormatter.string(from: date)
   }
 }
 
@@ -175,6 +175,9 @@ fileprivate class ChartPointIntersectionsView: UIView {
       let v = intersectionViews[i]
       let p = points[i]
       v.center = CGPoint(x: bounds.midX, y: p.point.y)
+//      UIView.animate(withDuration: ChartAnimation.interactive.rawValue) { [unowned self] in
+//        v.center = CGPoint(x: self.bounds.midX, y: p.point.y)
+//      }
     }
   }
 }

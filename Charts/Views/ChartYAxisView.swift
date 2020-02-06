@@ -67,7 +67,7 @@ fileprivate class ChartYAxisInnerView: UIView {
       addSubview(label)
     }
 
-    if alignment == .left {
+//    if alignment == .left {
       let p = UIBezierPath()
       for step in steps {
         p.move(to: CGPoint(x: 0, y: step))
@@ -78,7 +78,7 @@ fileprivate class ChartYAxisInnerView: UIView {
       shapeLayer.fillColor = UIColor.clear.cgColor
       shapeLayer.strokeColor = gridLineColor.cgColor
       shapeLayer.lineWidth = CGFloat(1) / UIScreen.main.scale
-    }
+//    }
     updateGrid()
   }
 
@@ -146,7 +146,7 @@ fileprivate class ChartYAxisInnerView: UIView {
 class ChartYAxisView: UIView {
   var lowerBound = 0
   var upperBound = 0
-  var alignment: ChartYAxisViewAlignment = .left
+  var alignment: ChartYAxisViewAlignment = .right
   var textColor: UIColor?
 
   var gridColor: UIColor = UIColor(white: 0, alpha: 0.3) {

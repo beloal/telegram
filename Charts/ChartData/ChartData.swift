@@ -13,9 +13,13 @@ enum ChartLineType: String {
   case area = "area"
 }
 
+protocol IFormatter {
+  func string(from value: Int) -> String
+}
+
 protocol IChartData {
   var xAxisLabels: [String] { get }
-  var xAxisDates: [Date] { get }
+//  var xAxisDates: [Date] { get }
   var lines: [IChartLine] { get }
   var type: ChartType { get }
 }

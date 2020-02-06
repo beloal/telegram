@@ -1,4 +1,5 @@
 import UIKit
+import MapKit
 
 extension UIColor {
   func image() -> UIImage? {
@@ -12,6 +13,32 @@ extension UIColor {
     let img = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
     return img
+  }
+}
+
+fileprivate struct ChartDateFofmatter: IFormatter {
+  private let formatter = DateFormatter()
+
+  init() {
+    formatter.dateFormat = "MMM dd"
+  }
+
+  func string(from value: Int) -> String {
+    let date = Date(timeIntervalSince1970: TimeInterval(value))
+    return formatter.string(from: date)
+  }
+}
+
+fileprivate struct ChartDistanceFormatter: IFormatter {
+  private let formatter = MKDistanceFormatter()
+
+  init() {
+    formatter.unitStyle = .abbreviated
+    formatter.units = .metric
+  }
+
+  func string(from value: Int) -> String {
+    formatter.string(fromDistance: CLLocationDistance(value / 1_000_000))
   }
 }
 
@@ -34,7 +61,7 @@ class ChartTableViewController: UITableViewController {
     tableView.register(ChartTableViewCell.self, forCellReuseIdentifier: "ChartCell")
     tableView.register(UITableViewCell.self, forCellReuseIdentifier: "LineCell")
 
-    let parser: IChartDataParser = ChartDataJsonParser()
+    let parser: IChartDataParser = ChartDataJsonParser(formatter: ChartDistanceFormatter())
     var charts: [ChartPresentationData] = []
     guard var path = Bundle.main.resourceURL else { return }
     path.appendPathComponent("contest")
@@ -47,14 +74,19 @@ class ChartTableViewController: UITableViewController {
       let cd = parser.parseData(data)![0]
       charts.append(ChartPresentationData(cd))
     }
+
+    guard let kmlPath = Bundle.main.resourceURL else { return }
+    let kmlData = try! Data(contentsOf: kmlPath.appendingPathComponent("points"))
+    let kmlString = String(data: kmlData, encoding: .utf8)
+    let points = KmlPoints(kmlString!.trimmingCharacters(in: .newlines))
     self.chartsData = charts
 
-    chartsData.forEach {
+//    chartsData.forEach {
       let cell = ChartTableViewCell(style: .default, reuseIdentifier: "ChartCell")
-      cell.chartData = $0
+      cell.chartData = chartsData[0]
       cells.append(cell)
       cell.chartView.maxWidth = UIScreen.main.bounds.width
-    }
+//    }
 
     updateColors()
   }
@@ -89,7 +121,7 @@ class ChartTableViewController: UITableViewController {
   // MARK: - Table view data source
 
   override func numberOfSections(in tableView: UITableView) -> Int {
-    return chartsData.count
+    return 1// chartsData.count
   }
 
   override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

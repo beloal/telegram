@@ -27,9 +27,9 @@ class ChartPresentationData {
     return chartData.xAxisLabels[point]
   }
 
-  func dateAt(_ point: Int) -> Date {
-    return chartData.xAxisDates[point]
-  }
+//  func dateAt(_ point: Int) -> Date {
+//    return chartData.xAxisDates[point]
+//  }
 
   func isLineVisibleAt(_ index: Int) -> Bool {
     return presentationLines[index].isVisible
@@ -141,6 +141,25 @@ extension IChartPathBuilder {
     return path
   }
 
+  func makeLinePreviewPath(line: ChartPresentationLine) -> UIBezierPath {
+    var filter = LowPassFilter(value: 0, filterFactor: 0.3)
+    let path = UIBezierPath()
+    let step = 5
+    let values = line.values.enumerated().compactMap { $0 % step == 0 ? $1 : nil }
+    for i in 0..<values.count {
+      let x = CGFloat(i * step)
+      let y = CGFloat(values[i] - line.minY)
+      if i == 0 {
+        filter.value = y
+        path.move(to: CGPoint(x: x, y: y))
+      } else {
+        filter.update(newValue: y)
+        path.addLine(to: CGPoint(x: x, y: filter.value))
+      }
+    }
+    return path
+  }
+
   func makeLinePath(line: ChartPresentationLine) -> UIBezierPath {
     let path = UIBezierPath()
     let values = line.values
@@ -241,13 +260,20 @@ class LinePathBuilder: IChartPathBuilder {
         }
         $0.path = makeBarPath(line: $0, bottomLine: nil)
         $0.previewPath = makeBarPreviewPath(line: $0, bottomLine: nil)
+      } else if $0.type == .area {
+        $0.minY = 0
+        for val in $0.values {
+          $0.maxY = max(val, $0.maxY)
+        }
+        $0.path = makePercentLinePath(line: $0, bottomLine: nil)
+        $0.previewPath = makePercentLinePreviewPath(line: $0, bottomLine: nil)
       } else {
         for val in $0.values {
           $0.minY = min(val, $0.minY)
           $0.maxY = max(val, $0.maxY)
         }
         $0.path = makeLinePath(line: $0)
-        $0.previewPath = $0.path
+        $0.previewPath = makeLinePreviewPath(line: $0)
       }
     }
   }
@@ -310,7 +336,9 @@ class PercentagePathBuilder: IChartPathBuilder {
     lines.forEach {
       $0.path = makePercentLinePath(line: $0, bottomLine: prevVisibleLine)
       $0.previewPath = makePercentLinePreviewPath(line: $0, bottomLine: prevVisibleLine)
-     if $0.isVisible { prevVisibleLine = $0 }
+      if $0.isVisible {
+        prevVisibleLine = $0
+      }
     }
   }
 }

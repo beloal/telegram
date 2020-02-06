@@ -29,6 +29,8 @@
 		477E9DE4226377A500D72D55 /* ChartHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 477E9DE3226377A500D72D55 /* ChartHeaderView.swift */; };
 		477E9DE82264014000D72D55 /* ChartSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 477E9DE72264014000D72D55 /* ChartSettingsView.swift */; };
 		47B66F45223D8C58009E57A4 /* ChartLineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47B66F44223D8C58009E57A4 /* ChartLineView.swift */; };
+		47ECDD7423EC55CD009442C1 /* KmlPoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47ECDD7323EC55CD009442C1 /* KmlPoints.swift */; };
+		47ECDD7623EC57AC009442C1 /* points in Resources */ = {isa = PBXBuildFile; fileRef = 47ECDD7523EC57AC009442C1 /* points */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,6 +60,8 @@
 		47B66F40223CED63009E57A4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		47B66F42223CED69009E57A4 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		47B66F44223D8C58009E57A4 /* ChartLineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartLineView.swift; sourceTree = "<group>"; };
+		47ECDD7323EC55CD009442C1 /* KmlPoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KmlPoints.swift; sourceTree = "<group>"; };
+		47ECDD7523EC57AC009442C1 /* points */ = {isa = PBXFileReference; lastKnownFileType = text; path = points; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +106,7 @@
 				473794642238E363005617D5 /* chart_data.json */,
 				477E9DDE225E2F3600D72D55 /* contest */,
 				4737945E2238E2E6005617D5 /* Info.plist */,
+				47ECDD7523EC57AC009442C1 /* points */,
 			);
 			path = Charts;
 			sourceTree = "<group>";
@@ -112,6 +117,7 @@
 				473794672238E3BF005617D5 /* ChartData.swift */,
 				473794692238E8F8005617D5 /* ChartDataParser.swift */,
 				477E9DE12260AEC900D72D55 /* ChartPresentationData.swift */,
+				47ECDD7323EC55CD009442C1 /* KmlPoints.swift */,
 			);
 			path = ChartData;
 			sourceTree = "<group>";
@@ -220,6 +226,7 @@
 				4737945D2238E2E6005617D5 /* LaunchScreen.storyboard in Resources */,
 				4737945A2238E2E6005617D5 /* Assets.xcassets in Resources */,
 				473794652238E363005617D5 /* chart_data.json in Resources */,
+				47ECDD7623EC57AC009442C1 /* points in Resources */,
 				473794582238E2E3005617D5 /* Main.storyboard in Resources */,
 				477E9DDF225E2F3600D72D55 /* contest in Resources */,
 			);
@@ -233,6 +240,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4772190F22479D6900E5B227 /* ChartTableViewController.swift in Sources */,
+				47ECDD7423EC55CD009442C1 /* KmlPoints.swift in Sources */,
 				474902CB2247F9DA008D71E0 /* ChartInfoView.swift in Sources */,
 				4737946A2238E8F8005617D5 /* ChartDataParser.swift in Sources */,
 				4772191122479DD600E5B227 /* ChartTableViewCell.swift in Sources */,
@@ -402,7 +410,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.beloal.tgcharts;
+				PRODUCT_BUNDLE_IDENTIFIER = com.beloal.tgcharts1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -423,7 +431,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.beloal.tgcharts;
+				PRODUCT_BUNDLE_IDENTIFIER = com.beloal.tgcharts1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 1;
