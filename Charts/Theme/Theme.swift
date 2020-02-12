@@ -34,7 +34,7 @@ struct DayTheme: ITheme {
     gridLine = UIColor(hexString: "#182D3B")!.withAlphaComponent(0.1)
     gridText = UIColor(hexString: "#8E8E93")!
     barMask = UIColor(white: 1, alpha: 0.5)
-    background = UIColor(hexString: "#EFEFF3")!
+    background = .white// UIColor(hexString: "#EFEFF3")!
     chartBackground = UIColor.white
     barStyle = .default
   }

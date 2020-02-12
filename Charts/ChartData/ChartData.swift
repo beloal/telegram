@@ -11,6 +11,7 @@ enum ChartLineType: String {
   case line = "line"
   case bar = "bar"
   case area = "area"
+  case lineArea = "lineArea"
 }
 
 protocol IFormatter {

@@ -8,10 +8,12 @@ class ChartPresentationData {
   private let chartData: IChartData
   private var presentationLines: [ChartPresentationLine]
   private let pathBuilder = ChartPathBuilder()
+  private let useFilter: Bool
 
-  init(_ chartData: IChartData) {
+  init(_ chartData: IChartData, useFilter: Bool = false) {
     self.chartData = chartData
-    presentationLines = chartData.lines.map { ChartPresentationLine($0) }
+    self.useFilter = useFilter
+    presentationLines = chartData.lines.map { ChartPresentationLine($0, useFilter: useFilter) }
     recalcBounds()
   }
 
@@ -19,8 +21,8 @@ class ChartPresentationData {
   var pointsCount: Int { return chartData.xAxisLabels.count }
   var type: ChartType { return chartData.type }
   var labels: [String] { return chartData.xAxisLabels }
-  var lower = Int.max
-  var upper = Int.min
+  var lower = CGFloat(Int.max)
+  var upper = CGFloat(Int.min)
   weak var delegate: ChartPresentationDataDelegate?
 
   func labelAt(_ point: Int) -> String {
@@ -54,8 +56,8 @@ class ChartPresentationData {
     presentationLines.forEach { $0.aggregatedValues = [] }
     pathBuilder.build(presentationLines, type: type)
 
-    var l = Int.max
-    var u = Int.min
+    var l = CGFloat(Int.max)
+    var u = CGFloat(Int.min)
     visibleLines.forEach {
       l = min($0.minY, l)
       u = max($0.maxY, u)
@@ -67,21 +69,33 @@ class ChartPresentationData {
 
 class ChartPresentationLine {
   private let chartLine: IChartLine
+  private let useFilter: Bool
 
   var isVisible = true
   var aggregatedValues: [CGFloat] = []
-  var minY: Int = Int.max
-  var maxY: Int = Int.min
+  var minY: CGFloat = CGFloat(Int.max)
+  var maxY: CGFloat = CGFloat(Int.min)
   var path = UIBezierPath()
   var previewPath = UIBezierPath()
 
-  var values: [Int] { return chartLine.values }
+  var values: [CGFloat] //{ return chartLine.values }
+  var originalValues: [Int] { return chartLine.values }
   var color: UIColor { return chartLine.color }
   var name: String { return chartLine.name }
   var type: ChartLineType { return chartLine.type }
 
-  init(_ chartLine: IChartLine) {
+  init(_ chartLine: IChartLine, useFilter: Bool = false) {
     self.chartLine = chartLine
+    self.useFilter = useFilter
+    if useFilter {
+      var filter = LowPassFilter(value: CGFloat(chartLine.values[0]), filterFactor: 0.8)
+      values = chartLine.values.map {
+        filter.update(newValue: CGFloat($0))
+        return filter.value
+      }
+    } else {
+      values = chartLine.values.map { CGFloat($0) }
+    }
   }
 }
 
@@ -260,7 +274,7 @@ class LinePathBuilder: IChartPathBuilder {
         }
         $0.path = makeBarPath(line: $0, bottomLine: nil)
         $0.previewPath = makeBarPreviewPath(line: $0, bottomLine: nil)
-      } else if $0.type == .area {
+      } else if $0.type == .area || $0.type == .lineArea {
         $0.minY = 0
         for val in $0.values {
           $0.maxY = max(val, $0.maxY)
@@ -298,12 +312,12 @@ class StackedPathBuilder: IChartPathBuilder {
     var prevVisibleLine: ChartPresentationLine? = nil
     for i in 0..<lines.count {
       let line = lines[i]
-      var u = Int.min
+      var u = CGFloat(Int.min)
       for i in 0..<line.values.count {
         let dy = prevVisibleLine?.aggregatedValues[i] ?? 0
         let v = CGFloat(line.values[i]) + dy
         line.aggregatedValues.append(v)
-        u = max(u, Int(v))
+        u = max(u, v)
       }
       line.minY = 0
       line.maxY = u
@@ -319,7 +333,7 @@ class PercentagePathBuilder: IChartPathBuilder {
     let visibleLines = lines.filter { $0.isVisible }
     visibleLines.forEach {
       $0.minY = 0
-      $0.maxY = Int.min
+      $0.maxY = CGFloat(Int.min)
     }
 
     for i in 0..<visibleLines[0].values.count {
@@ -328,7 +342,7 @@ class PercentagePathBuilder: IChartPathBuilder {
       visibleLines.forEach {
         aggrPercentage += CGFloat($0.values[i]) / sum * 100
         $0.aggregatedValues.append(aggrPercentage)
-        $0.maxY = Int(max(round(aggrPercentage), CGFloat($0.maxY)))
+        $0.maxY = max(round(aggrPercentage), CGFloat($0.maxY))
       }
     }
 

@@ -14,20 +14,39 @@ protocol ChartInfoViewDelegate: AnyObject {
 }
 
 fileprivate class ChartPointInfoView: UIView {
-  let dateLabel = UILabel()
-  var valueLabels: [UILabel] = []
-  var nameLabels: [UILabel] = []
-  let valueStack = UIStackView()
-  let nameStack = UIStackView()
+  enum Alignment {
+    case left
+    case right
+  }
 
-  var textColor: UIColor = .white {
+  let captionLabel = UILabel()
+  let distanceLabel = UILabel()
+  let altitudeLabel = UILabel()
+  let stackView = UIStackView()
+
+  let maskLayer = CAShapeLayer()
+  var maskPath: UIBezierPath?
+
+  var arrowY: CGFloat? {
     didSet {
-      dateLabel.textColor = textColor
-      nameLabels.forEach { $0.textColor = textColor }
+      setNeedsLayout()
     }
   }
 
-//  let dateFormatter = DateFormatter()
+  var alignment = Alignment.left {
+    didSet {
+      updateMask()
+    }
+  }
+
+  var textColor: UIColor = .white {
+    didSet {
+      captionLabel.textColor = textColor
+      distanceLabel.textColor = textColor
+      altitudeLabel.textColor = textColor
+    }
+  }
+
   let font = UIFont.systemFont(ofSize: 12, weight: .medium)
   let lightFont = UIFont.systemFont(ofSize: 12)
 
@@ -35,39 +54,40 @@ fileprivate class ChartPointInfoView: UIView {
     super.init(frame: frame)
 
     layer.cornerRadius = 5
-    clipsToBounds = true
-    backgroundColor = UIColor(white: 0.9, alpha: 0.7)
-//    dateFormatter.dateFormat = "EEE, dd MMM yyyy"
+    backgroundColor = .clear
+    layer.shadowColor = UIColor(white: 0, alpha: 1).cgColor
+    layer.shadowOpacity = 0.25
+    layer.shadowRadius = 2
+    layer.shadowOffset = CGSize(width: 0, height: 2)
+    maskLayer.fillColor = UIColor.white.cgColor
+    layer.addSublayer(maskLayer)
 
-    dateLabel.textColor = textColor
-    addSubview(dateLabel)
-    addSubview(valueStack)
-    addSubview(nameStack)
+    stackView.alignment = .leading
+    stackView.axis = .vertical
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(stackView)
 
-    valueStack.alignment = .trailing
-    valueStack.axis = .vertical
-    nameStack.alignment = .leading
-    nameStack.axis = .vertical
+    NSLayoutConstraint.activate([
+      stackView.leftAnchor.constraint(equalTo: leftAnchor, constant: 6),
+      stackView.topAnchor.constraint(equalTo: topAnchor, constant: 6),
+      stackView.rightAnchor.constraint(equalTo: rightAnchor, constant: -6),
+      stackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -6)
+    ])
 
-    dateLabel.translatesAutoresizingMaskIntoConstraints = false
-    valueStack.translatesAutoresizingMaskIntoConstraints = false
-    nameStack.translatesAutoresizingMaskIntoConstraints = false
+    stackView.addArrangedSubview(captionLabel)
+    stackView.addArrangedSubview(distanceLabel)
+    stackView.addArrangedSubview(altitudeLabel)
+    stackView.setCustomSpacing(6, after: distanceLabel)
 
-    dateLabel.font = font
+    captionLabel.text = "Distance:"
 
-    let dl = dateLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 10)
-    let dt = dateLabel.topAnchor.constraint(equalTo: topAnchor, constant: 10)
-    let dr = dateLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -10)
-    let db = dateLabel.bottomAnchor.constraint(equalTo: valueStack.topAnchor)
+    captionLabel.font = lightFont
+    distanceLabel.font = lightFont
+    altitudeLabel.font = lightFont
 
-    let sl = valueStack.leftAnchor.constraint(equalTo: leftAnchor, constant: 10)
-    let sr = valueStack.rightAnchor.constraint(equalTo: rightAnchor, constant: -10)
-    let sb = valueStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10)
-
-    let nl = nameStack.leftAnchor.constraint(equalTo: leftAnchor, constant: 10)
-    let nr = nameStack.rightAnchor.constraint(equalTo: rightAnchor, constant: -10)
-    let nb = nameStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10)
-    NSLayoutConstraint.activate([dl, dt, dr, db, sl, sr, sb, nl, nr, nb])
+    captionLabel.textColor = textColor
+    distanceLabel.textColor = textColor
+    altitudeLabel.textColor = textColor
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -75,38 +95,37 @@ fileprivate class ChartPointInfoView: UIView {
   }
 
   func set(x: CGFloat, date: String, points: [ChartLineInfo]) {
-    valueLabels.forEach { $0.removeFromSuperview() }
-    valueLabels.removeAll()
-    nameLabels.forEach { $0.removeFromSuperview() }
-    nameLabels.removeAll()
-    for point in points {
-      let l = UILabel()
-      l.font = lightFont
-      l.textColor = point.color
-      l.text = String(point.value)
-      l.translatesAutoresizingMaskIntoConstraints = false
-      valueLabels.append(l)
-      valueStack.addArrangedSubview(l)
-
-      let nl = UILabel()
-      nl.font = lightFont
-      nl.textColor = textColor
-      nl.text = point.name
-      nl.translatesAutoresizingMaskIntoConstraints = false
-      nameLabels.append(nl)
-      nameStack.addArrangedSubview(nl)
-    }
-    dateLabel.text = date// dateFormatter.string(from: date)
+    distanceLabel.text = date
+    altitudeLabel.text = "▲ \(points[0].value)"
   }
 
   func update(x: CGFloat, date: String, points: [ChartLineInfo]) {
-    for i in 0..<valueLabels.count {
-      let l = valueLabels[i]
-      l.text = String(points[i].value)
-      let nl = nameLabels[i]
-      nl.text = points[i].name
+    distanceLabel.text = date
+    altitudeLabel.text = "▲ \(points[0].value)"
+  }
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+
+    let y = arrowY ?? bounds.midY
+    let path = UIBezierPath(roundedRect: bounds, cornerRadius: 3)
+    let trianglePath = UIBezierPath()
+    trianglePath.move(to: CGPoint(x: bounds.maxX, y: y - 3))
+    trianglePath.addLine(to: CGPoint(x: bounds.maxX + 5, y: y))
+    trianglePath.addLine(to: CGPoint(x: bounds.maxX, y: y + 3))
+    trianglePath.close()
+    path.append(trianglePath)
+    maskPath = path
+    updateMask()
+  }
+
+  private func updateMask() {
+    guard let path = maskPath?.copy() as? UIBezierPath else { return }
+    if alignment == .right {
+      path.apply(CGAffineTransform.identity.scaledBy(x: -1, y: 1).translatedBy(x: -bounds.width, y: 0))
     }
-    dateLabel.text = date// dateFormatter.string(from: date)
+    maskLayer.path = path.cgPath
+    layer.shadowPath = path.cgPath
   }
 }
 
@@ -115,7 +134,9 @@ fileprivate class CircleView: UIView {
 
   var color: UIColor? {
     didSet {
-      shapeLayer.strokeColor = color?.cgColor
+      shapeLayer.fillColor = color?.withAlphaComponent(0.5).cgColor
+      ringLayer.fillColor = UIColor.white.cgColor
+      centerLayer.fillColor = color?.cgColor
     }
   }
 
@@ -123,19 +144,30 @@ fileprivate class CircleView: UIView {
     return layer as! CAShapeLayer
   }
 
+  let ringLayer = CAShapeLayer()
+  let centerLayer = CAShapeLayer()
+
   override var frame: CGRect {
     didSet {
       let p = UIBezierPath(ovalIn: bounds)
       shapeLayer.path = p.cgPath
+      ringLayer.frame = shapeLayer.bounds.insetBy(dx: shapeLayer.bounds.width / 6, dy: shapeLayer.bounds.height / 6)
+      ringLayer.path = UIBezierPath(ovalIn: ringLayer.bounds).cgPath
+      centerLayer.frame = shapeLayer.bounds.insetBy(dx: shapeLayer.bounds.width / 3, dy: shapeLayer.bounds.height / 3)
+      centerLayer.path = UIBezierPath(ovalIn: centerLayer.bounds).cgPath
     }
   }
 
   override init(frame: CGRect) {
     super.init(frame: frame)
 
-    shapeLayer.strokeColor = color?.cgColor
-    shapeLayer.fillColor = UIColor.white.cgColor
-    shapeLayer.lineWidth = 2
+    shapeLayer.fillColor = color?.withAlphaComponent(0.5).cgColor
+    shapeLayer.lineWidth = 4
+    shapeLayer.fillRule = .evenOdd
+    shapeLayer.addSublayer(ringLayer)
+    shapeLayer.addSublayer(centerLayer)
+    ringLayer.fillColor = UIColor.white.cgColor
+    centerLayer.fillColor = color?.cgColor
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -148,7 +180,7 @@ fileprivate class ChartPointIntersectionsView: UIView {
 
   override init(frame: CGRect) {
     super.init(frame: frame)
-    backgroundColor = UIColor.lightGray
+    backgroundColor = UIColor(red: 0.14, green: 0.61, blue: 0.95, alpha: 0.5)
     transform = CGAffineTransform.identity.scaledBy(x: 1, y: -1)
   }
 
@@ -163,7 +195,7 @@ fileprivate class ChartPointIntersectionsView: UIView {
     for point in points {
       let v = CircleView()
       v.color = point.color
-      v.frame = CGRect(x: 0, y: 0, width: 6, height: 6)
+      v.frame = CGRect(x: 0, y: 0, width: 24, height: 24)
       v.center = CGPoint(x: bounds.midX, y: point.point.y)
       intersectionViews.append(v)
       addSubview(v)
@@ -175,9 +207,6 @@ fileprivate class ChartPointIntersectionsView: UIView {
       let v = intersectionViews[i]
       let p = points[i]
       v.center = CGPoint(x: bounds.midX, y: p.point.y)
-//      UIView.animate(withDuration: ChartAnimation.interactive.rawValue) { [unowned self] in
-//        v.center = CGPoint(x: self.bounds.midX, y: p.point.y)
-//      }
     }
   }
 }
@@ -210,12 +239,13 @@ class ChartInfoView: UIView {
   weak var delegate: ChartInfoViewDelegate?
 
   private let pointInfoView = ChartPointInfoView()
-  private let pointsView = ChartPointIntersectionsView(frame: CGRect(x: 0, y: 0, width: 1, height: 0))
+  private let pointsView = ChartPointIntersectionsView(frame: CGRect(x: 0, y: 0, width: 2, height: 0))
   private let infoMaskView = ChartInfoMaskView()
+  private var lineInfo: ChartLineInfo?
 
   var bgColor: UIColor = UIColor.white {
     didSet {
-      pointInfoView.backgroundColor = bgColor
+//      pointInfoView.backgroundColor = bgColor
     }
   }
 
@@ -231,13 +261,14 @@ class ChartInfoView: UIView {
     }
   }
 
+  private var captured = false
+
   override init(frame: CGRect) {
     super.init(frame: frame)
 
     isExclusiveTouch = true
-    let lp = UILongPressGestureRecognizer(target: self, action: #selector(onPress(_:)))
-    lp.minimumPressDuration = 0.2
-    addGestureRecognizer(lp)
+    let panGR = UIPanGestureRecognizer(target: self, action: #selector(onPan(_:)))
+    addGestureRecognizer(panGR)
     infoMaskView.isUserInteractionEnabled = false
     infoMaskView.alpha = 0
     infoMaskView.backgroundColor = maskColor
@@ -247,39 +278,46 @@ class ChartInfoView: UIView {
     fatalError()
   }
 
-  @objc func onPress(_ sender: UILongPressGestureRecognizer) {
-    guard let delegate = delegate else { return }
-    let x = sender.location(in: self).x
-    guard let (date, intersectionPoints) = delegate.chartInfoView(self, infoAtPointX: x) else { return }
+  func update(_ x: CGFloat? = nil) {
+    let x = x ?? pointsView.center.x
+    guard let delegate = delegate,
+      let (date, intersectionPoints) = delegate.chartInfoView(self, infoAtPointX: x) else { return }
+    lineInfo = intersectionPoints[0]
+//    UIView.animate(withDuration: 0.1) { [unowned self] in
+      self.pointsView.updatePoints(intersectionPoints)
+//    }
+    pointInfoView.update(x: x, date: date, points: intersectionPoints)
+    let y = max(pointInfoView.frame.height / 2 + 5,
+                min(bounds.height - pointInfoView.frame.height / 2 - 5, bounds.height - lineInfo!.point.y));
+    pointInfoView.center = CGPoint(x: pointInfoView.center.x, y: y)
+    let arrowPoint = convert(CGPoint(x: 0, y: bounds.height - lineInfo!.point.y), to: pointInfoView)
+    pointInfoView.arrowY = arrowPoint.y
+  }
 
+  @objc func onPan(_ sender: UIPanGestureRecognizer) {
+    let x = sender.location(in: self).x
     switch sender.state {
     case .possible:
       break
     case .began:
-      addSubview(pointsView)
-      addSubview(infoMaskView)
-      pointsView.setPoints(intersectionPoints)
-      pointInfoView.set(x: x, date: date, points: intersectionPoints)
-      addSubview(pointInfoView)
+      guard let lineInfo = lineInfo else { return }
+      captured = abs(x - lineInfo.point.x) < 22
     case .changed:
-      pointsView.updatePoints(intersectionPoints)
-      pointInfoView.update(x: x, date: date, points: intersectionPoints)
-    case .ended:
-      fallthrough
-    case .cancelled:
-      fallthrough
-    case .failed:
-      pointsView.removeFromSuperview()
-      pointInfoView.removeFromSuperview()
-      infoMaskView.removeFromSuperview()
+      if captured {
+        if x < bounds.minX || x > bounds.maxX {
+          return
+        }
+        update(x)
+        updateViews(point: lineInfo!.point, left: nil, right: nil)
+      }
+    case .ended, .cancelled, .failed:
+      captured = false
+    @unknown default:
+      fatalError()
     }
-
-    updateViews(x: intersectionPoints[0].point.x,
-                left: intersectionPoints[0].left,
-                right: intersectionPoints[0].rigth)
   }
 
-  func updateViews(x: CGFloat, left: CGFloat?, right: CGFloat?) {
+  func updateViews(point: CGPoint, left: CGFloat?, right: CGFloat?) {
     if let left = left, let right = right {
       infoMaskView.alpha = 1
       pointsView.alpha = 0
@@ -287,14 +325,17 @@ class ChartInfoView: UIView {
     } else {
       infoMaskView.alpha = 0
       pointsView.alpha = 1
-      pointsView.center = CGPoint(x: x, y: bounds.midY)
+      pointsView.center = CGPoint(x: point.x, y: bounds.midY)
     }
     let s = pointInfoView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
-    pointInfoView.frame.size = CGSize(width: 150, height: s.height)
-    if x > 170 {
-      pointInfoView.center = CGPoint(x: x - 91, y: pointInfoView.frame.height / 2)
+    pointInfoView.frame.size = s
+    let orientationChangeX = pointInfoView.alignment == .left ? s.width + 40 : bounds.width - s.width - 40
+    if point.x > orientationChangeX {
+      pointInfoView.alignment = .left
+      pointInfoView.center = CGPoint(x: point.x - s.width / 2 - 20, y: pointInfoView.center.y)
     } else {
-      pointInfoView.center = CGPoint(x: x + 91, y: pointInfoView.frame.height / 2)
+      pointInfoView.alignment = .right
+      pointInfoView.center = CGPoint(x: point.x + s.width / 2 + 20, y: pointInfoView.center.y)
     }
     var f = pointInfoView.frame
     if f.minX < 0 {
@@ -313,6 +354,16 @@ class ChartInfoView: UIView {
     f.size.height = bounds.height
     pointsView.frame = f
     infoMaskView.frame = bounds
+    if lineInfo == nil, bounds.width > 0 {
+      let x = bounds.width / 1.5
+      guard let (date, intersectionPoints) = delegate?.chartInfoView(self, infoAtPointX: x) else { return }
+      addSubview(pointsView)
+      addSubview(pointInfoView)
+      lineInfo = intersectionPoints[0]
+      pointsView.setPoints(intersectionPoints)
+      pointInfoView.set(x: x, date: date, points: intersectionPoints)
+      updateViews(point: lineInfo!.point, left: nil, right: nil)
+    }
   }
 }
 

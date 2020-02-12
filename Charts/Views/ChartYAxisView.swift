@@ -9,16 +9,20 @@ fileprivate class ChartYAxisInnerView: UIView {
   override class var layerClass: AnyClass { return CAShapeLayer.self }
 
   private static let font = UIFont.systemFont(ofSize: 12, weight: .regular)
-  var lowerBound = 0
-  var upperBound = 0
-  var steps: [Int] = []
-  var labels: [UILabel] = []
+  var lowerBound: CGFloat = 0
+  var upperBound: CGFloat = 0
+  var steps: [CGFloat] = []
+//  var labels: [UILabel] = []
+  let lowerLabel: UILabel
+  let upperLabel: UILabel
   var alignment: ChartYAxisViewAlignment = .left
   var textColor: UIColor?
   var gridColor: UIColor = UIColor(white: 0, alpha: 0.3) {
     didSet {
       if textColor == nil {
-        labels.forEach { $0.textColor = gridColor }
+        lowerLabel.textColor = gridColor
+        upperLabel.textColor = gridColor
+//        labels.forEach { $0.textColor = gridColor }
       }
     }
   }
@@ -43,62 +47,66 @@ fileprivate class ChartYAxisInnerView: UIView {
     return layer as! CAShapeLayer
   }
 
-  func makeLabel(y: Int) -> UILabel {
+  override init(frame: CGRect) {
+    lowerLabel = ChartYAxisInnerView.makeLabel()
+    upperLabel = ChartYAxisInnerView.makeLabel()
+
+    super.init(frame: frame)
+
+    lowerLabel.translatesAutoresizingMaskIntoConstraints = false
+    upperLabel.translatesAutoresizingMaskIntoConstraints = false
+
+    addSubview(lowerLabel)
+    addSubview(upperLabel)
+
+    NSLayoutConstraint.activate([
+      lowerLabel.topAnchor.constraint(equalTo: topAnchor),
+      lowerLabel.rightAnchor.constraint(equalTo: rightAnchor),
+      upperLabel.bottomAnchor.constraint(equalTo: bottomAnchor),
+      upperLabel.rightAnchor.constraint(equalTo: rightAnchor)
+    ])
+
+    shapeLayer.fillColor = UIColor.clear.cgColor
+    shapeLayer.strokeColor = gridLineColor.cgColor
+    shapeLayer.lineDashPattern = [2, 3]
+    shapeLayer.lineWidth = 1
+  }
+
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  static func makeLabel() -> UILabel {
     let label = UILabel()
     label.font = ChartYAxisInnerView.font
-    label.textColor = textColor ?? gridColor
-    label.text = "\(y)"
-    label.frame = CGRect(x: 0, y: 0, width: 100, height: 15)
     label.transform = CGAffineTransform.identity.scaledBy(x: 1, y: -1)
     return label
   }
 
-  func setBounds(lower: Int, upper: Int, steps: [Int]) {
+  func setBounds(lower: CGFloat, upper: CGFloat, steps: [CGFloat]) {
     lowerBound = lower
     upperBound = upper
+    lowerLabel.text = "\(Int(round(lower)))"
+    upperLabel.text = "\(Int(round(upper)))"
     self.steps = steps
-    labels.forEach { $0.removeFromSuperview() }
-    labels.removeAll()
 
-    for step in steps {
-      let label = makeLabel(y: step)
-      label.textAlignment = alignment == .left ? .left : .right
-      labels.append(label)
-      addSubview(label)
-    }
-
-//    if alignment == .left {
-      let p = UIBezierPath()
-      for step in steps {
-        p.move(to: CGPoint(x: 0, y: step))
-        p.addLine(to: CGPoint(x: 10000, y: step))
-      }
-
-      path = p
-      shapeLayer.fillColor = UIColor.clear.cgColor
-      shapeLayer.strokeColor = gridLineColor.cgColor
-      shapeLayer.lineWidth = CGFloat(1) / UIScreen.main.scale
-//    }
     updateGrid()
   }
 
-  func updateBounds(lower:Int, upper: Int, animationStyle: ChartAnimation = .none) {
+  func updateBounds(lower: CGFloat, upper: CGFloat, animationStyle: ChartAnimation = .none) {
     lowerBound = lower
     upperBound = upper
     updateGrid(animationStyle: animationStyle)
   }
 
   func updateGrid(animationStyle: ChartAnimation = .none) {
-    guard let realPath = path?.copy() as? UIBezierPath else {
-      if animationStyle != .none {
-        UIView.animate(withDuration: animationStyle.rawValue) {
-          self.updateLabels()
-        }
-      } else {
-        updateLabels()
-      }
-      return
+    let p = UIBezierPath()
+    for step in steps {
+      p.move(to: CGPoint(x: 0, y: step))
+      p.addLine(to: CGPoint(x: bounds.width, y: step))
     }
+
+    let realPath = p
 
     let yScale = (bounds.height) / CGFloat(upperBound - lowerBound)
     let yTranslate = (bounds.height) * CGFloat(-lowerBound) / CGFloat(upperBound - lowerBound)
@@ -122,30 +130,15 @@ fileprivate class ChartYAxisInnerView: UIView {
       animation.fromValue = shapeLayer.path
       animation.timingFunction = timingFunction
       layer.add(animation, forKey: "path")
-      UIView.animate(withDuration: duration) {
-        self.updateLabels()
-      }
-    } else {
-      updateLabels()
     }
 
     shapeLayer.path = realPath.cgPath
   }
-
-  func updateLabels() {
-    for i in 0..<labels.count {
-      let y = bounds.height * CGFloat(steps[i] - lowerBound) / CGFloat(upperBound - lowerBound)
-      let l = labels[i]
-      var f = l.frame
-      f.origin = CGPoint(x: alignment == .left ? 0 : bounds.width - f.width, y: y)
-      l.frame = f.integral
-    }
-  }
 }
 
 class ChartYAxisView: UIView {
-  var lowerBound = 0
-  var upperBound = 0
+  var lowerBound: CGFloat = 0
+  var upperBound: CGFloat = 0
   var alignment: ChartYAxisViewAlignment = .right
   var textColor: UIColor?
 
@@ -169,7 +162,7 @@ class ChartYAxisView: UIView {
 
   private var gridView: ChartYAxisInnerView?
 
-  func setBounds(lower: Int, upper: Int, steps: [Int], animationStyle: ChartAnimation = .none) {
+  func setBounds(lower: CGFloat, upper: CGFloat, steps: [CGFloat], animationStyle: ChartAnimation = .none) {
     let gv = ChartYAxisInnerView()
     gv.alignment = alignment
     gv.textColor = textColor
@@ -202,13 +195,5 @@ class ChartYAxisView: UIView {
     gridView = gv
     lowerBound = lower
     upperBound = upper
-  }
-
-  func setLabelsVisible(_ visible: Bool) {
-    UIView.animate(withDuration: kAnimationDuration) {
-      self.gridView?.labels.forEach {
-        $0.alpha = visible ? 1 : 0
-      }
-    }
   }
 }

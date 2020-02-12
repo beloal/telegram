@@ -140,7 +140,7 @@ class ChartSettingsView: UIView {
   }
 
   @objc func onTap(_ sender: UITapGestureRecognizer) {
-    let i = buttons.index(of: sender.view as! ButtonView)!
+    let i = buttons.firstIndex(of: sender.view as! ButtonView)!
     let visible = chartData.isLineVisibleAt(i)
     chartData.setLineVisible(!visible, at: i)
     updateVisibility()
@@ -148,7 +148,7 @@ class ChartSettingsView: UIView {
 
   @objc func onLongTap(_ sender: UILongPressGestureRecognizer) {
     if sender.state == .began {
-      let index = buttons.index(of: sender.view as! ButtonView)!
+      let index = buttons.firstIndex(of: sender.view as! ButtonView)!
       chartData.setLineVisible(true, at: index)
       for i in 0..<chartData.linesCount {
         if i == index { continue }

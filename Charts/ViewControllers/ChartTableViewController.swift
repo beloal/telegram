@@ -61,32 +61,33 @@ class ChartTableViewController: UITableViewController {
     tableView.register(ChartTableViewCell.self, forCellReuseIdentifier: "ChartCell")
     tableView.register(UITableViewCell.self, forCellReuseIdentifier: "LineCell")
 
-    let parser: IChartDataParser = ChartDataJsonParser(formatter: ChartDistanceFormatter())
-    var charts: [ChartPresentationData] = []
-    guard var path = Bundle.main.resourceURL else { return }
-    path.appendPathComponent("contest")
-    try! FileManager.default.contentsOfDirectory(atPath: path.path).sorted().forEach {
-      guard let data = try? Data(contentsOf: path.appendingPathComponent($0).appendingPathComponent("overview.json")) else {
-        assertionFailure("Can't read file")
-        return
-      }
-
-      let cd = parser.parseData(data)![0]
-      charts.append(ChartPresentationData(cd))
-    }
+//    let parser: IChartDataParser = ChartDataJsonParser(formatter: ChartDistanceFormatter())
+//    var charts: [ChartPresentationData] = []
+//    guard var path = Bundle.main.resourceURL else { return }
+//    path.appendPathComponent("contest")
+//    try! FileManager.default.contentsOfDirectory(atPath: path.path).sorted().forEach {
+//      guard let data = try? Data(contentsOf: path.appendingPathComponent($0).appendingPathComponent("overview.json")) else {
+//        assertionFailure("Can't read file")
+//        return
+//      }
+//
+//      let cd = parser.parseData(data)![0]
+//      charts.append(ChartPresentationData(cd))
+//    }
 
     guard let kmlPath = Bundle.main.resourceURL else { return }
     let kmlData = try! Data(contentsOf: kmlPath.appendingPathComponent("points"))
     let kmlString = String(data: kmlData, encoding: .utf8)
     let points = KmlPoints(kmlString!.trimmingCharacters(in: .newlines))
-    self.chartsData = charts
+    
+    self.chartsData = [ChartPresentationData(points), ChartPresentationData(points, useFilter: true)]
 
-//    chartsData.forEach {
+    chartsData.forEach {
       let cell = ChartTableViewCell(style: .default, reuseIdentifier: "ChartCell")
-      cell.chartData = chartsData[0]
+      cell.chartData = $0// chartsData[0]
       cells.append(cell)
       cell.chartView.maxWidth = UIScreen.main.bounds.width
-//    }
+    }
 
     updateColors()
   }
@@ -121,7 +122,7 @@ class ChartTableViewController: UITableViewController {
   // MARK: - Table view data source
 
   override func numberOfSections(in tableView: UITableView) -> Int {
-    return 1// chartsData.count
+    return chartsData.count
   }
 
   override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
