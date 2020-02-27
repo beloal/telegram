@@ -164,71 +164,76 @@ class ChartPreviewView: UIView {
     let rightPan = UIPanGestureRecognizer(target: self, action: #selector(onRightPan(_:)))
     leftBoundView.addGestureRecognizer(leftPan)
     rightBoundView.addGestureRecognizer(rightPan)
-    clipsToBounds = true
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError()
   }
 
   @objc func onPan(_ sender: UIPanGestureRecognizer) {
-    if sender.state == .changed {
-      let p = sender.translation(in: viewPortView)
-      let count = chartData.labels.count - 1
-      let x = Int((viewPortView.frame.minX + p.x) / bounds.width * CGFloat(count))
-      let dx = maxX - minX
-      let mx = x + dx
+    if sender.state != .changed { return }
 
-      if x > 0 && mx < count {
-        viewPortView.frame = viewPortView.frame.offsetBy(dx: p.x, dy: 0)
-        sender.setTranslation(CGPoint(x: 0, y: 0), in: viewPortView)
-        if x != minX {
-          minX = x
-          maxX = mx
-          delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
-        }
-      } else if minX > 0 && x <= 0 {
-        setX(min: 0, max: dx)
-      } else if maxX < count && mx >= count {
-        setX(min: count - dx, max: count)
+    let p = sender.translation(in: viewPortView)
+    let count = chartData.labels.count - 1
+    let x = Int((viewPortView.frame.minX + p.x) / bounds.width * CGFloat(count))
+    let dx = maxX - minX
+    let mx = x + dx
+
+    if x > 0 && mx < count {
+      viewPortView.frame = viewPortView.frame.offsetBy(dx: p.x, dy: 0)
+      sender.setTranslation(CGPoint(x: 0, y: 0), in: viewPortView)
+      if x != minX {
+        minX = x
+        maxX = mx
+        delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
       }
+    } else if minX > 0 && x <= 0 {
+      setX(min: 0, max: dx)
+    } else if maxX < count && mx >= count {
+      setX(min: count - dx, max: count)
     }
   }
 
   @objc func onLeftPan(_ sender: UIPanGestureRecognizer) {
-    if sender.state == .changed {
-      let p = sender.translation(in: leftBoundView)
-      let count = chartData.labels.count - 1
-      let x = Int((viewPortView.frame.minX + p.x) / bounds.width * CGFloat(count))
+    if sender.state != .changed { return }
 
-      if x > 0 && x < maxX && maxX - x >= count / 10 {
-        var f = viewPortView.frame
-        f = CGRect(x: f.minX + p.x, y: f.minY, width: f.width - p.x, height: f.height)
-        viewPortView.frame = f
-        rightBoundView.frame = CGRect(x: viewPortView.bounds.width - 14, y: 0, width: 44, height: viewPortView.bounds.height)
-        sender.setTranslation(CGPoint(x: 0, y: 0), in: leftBoundView)
-        if x != minX {
-          minX = x
-          delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
-        }
-      } else if x <= 0 && minX > 0 {
-        setX(min: 0, max: maxX)
+    let p = sender.translation(in: leftBoundView)
+    let count = chartData.labels.count - 1
+    let x = Int((viewPortView.frame.minX + p.x) / bounds.width * CGFloat(count))
+
+    if x > 0 && x < maxX && maxX - x >= count / 10 {
+      var f = viewPortView.frame
+      f = CGRect(x: f.minX + p.x, y: f.minY, width: f.width - p.x, height: f.height)
+      viewPortView.frame = f
+      rightBoundView.frame = CGRect(x: viewPortView.bounds.width - 14, y: 0, width: 44, height: viewPortView.bounds.height)
+      sender.setTranslation(CGPoint(x: 0, y: 0), in: leftBoundView)
+      if x != minX {
+        minX = x
+        delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
       }
+    } else if x <= 0 && minX > 0 {
+      setX(min: 0, max: maxX)
     }
   }
 
   @objc func onRightPan(_ sender: UIPanGestureRecognizer) {
+    if sender.state != .changed { return }
+
     let p = sender.translation(in: viewPortView)
     let count = chartData.labels.count - 1
-    let mx = Int((viewPortView.frame.maxX + p.x) / bounds.width * CGFloat(count))
+    let x = Int((viewPortView.frame.maxX + p.x) / bounds.width * CGFloat(count))
 
-    if mx > minX && mx < count && mx - minX >= count / 10 {
+    if x > minX && x < count && x - minX >= count / 10 {
       var f = viewPortView.frame
       f = CGRect(x: f.minX, y: f.minY, width: f.width + p.x, height: f.height)
       viewPortView.frame = f
       rightBoundView.frame = CGRect(x: viewPortView.bounds.width - 14, y: 0, width: 44, height: viewPortView.bounds.height)
-      sender.setTranslation(CGPoint(x: 0, y: 0), in: leftBoundView)
-      if mx != maxX {
-        maxX = mx
+      sender.setTranslation(CGPoint(x: 0, y: 0), in: rightBoundView)
+      if x != maxX {
+        maxX = x
         delegate?.chartPreviewView(self, didChangeMinX: minX, maxX: maxX)
       }
-    } else if mx >= count && maxX < count {
+    } else if x >= count && maxX < count {
       setX(min: minX, max: count)
     }
   }
@@ -249,9 +254,5 @@ class ChartPreviewView: UIView {
                                 height: bounds.height)
     leftBoundView.frame = CGRect(x: -30, y: 0, width: 44, height: viewPortView.bounds.height)
     rightBoundView.frame = CGRect(x: viewPortView.bounds.width - 14, y: 0, width: 44, height: viewPortView.bounds.height)
-  }
-
-  required init?(coder aDecoder: NSCoder) {
-    fatalError()
   }
 }

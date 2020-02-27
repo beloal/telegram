@@ -26,6 +26,12 @@ class ChartView: UIView {
     return 56 + 125 + 16
   }
 
+  private var panStartPoint = 0
+  private var panGR: UIPanGestureRecognizer!
+  private var pinchStartLower = 0
+  private var pinchStartUpper = 0
+  private var pinchGR: UIPinchGestureRecognizer!
+
   var previewSelectorColor: UIColor = UIColor.white {
     didSet {
       chartPreviewView.selectorColor = previewSelectorColor
@@ -35,12 +41,6 @@ class ChartView: UIView {
   var previewTintColor: UIColor = UIColor.clear {
     didSet {
       chartPreviewView.selectorTintColor = previewTintColor
-    }
-  }
-
-  var maskColor: UIColor = UIColor.clear {
-    didSet {
-      chartInfoView.maskColor = maskColor
     }
   }
 
@@ -116,7 +116,6 @@ class ChartView: UIView {
       chartInfoView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
       chartInfoView.delegate = self
       chartInfoView.bgColor = bgColor
-      chartInfoView.maskColor = maskColor
       chartInfoView.textColor = headerTextColor
       chartsContainerView.addSubview(chartInfoView)
 
@@ -144,8 +143,11 @@ class ChartView: UIView {
     yAxisLeftView.gridLineColor = gridTextColor
     yAxisRightView.gridLineColor = gridTextColor
     chartInfoView.bgColor = bgColor
-    chartInfoView.maskColor = maskColor
 
+    panGR = UIPanGestureRecognizer(target: self, action: #selector(onPan(_:)))
+    chartsContainerView.addGestureRecognizer(panGR)
+    pinchGR = UIPinchGestureRecognizer(target: self, action: #selector(onPinch(_:)))
+    chartsContainerView.addGestureRecognizer(pinchGR)
     addSubview(chartsContainerView)
     addSubview(chartPreviewView)
     chartPreviewView.delegate = self
@@ -162,6 +164,55 @@ class ChartView: UIView {
 
     let previewFrame = CGRect(x: bounds.minX, y: bounds.minY + 125 + 26, width: bounds.width, height: 30)
     chartPreviewView.frame = previewFrame
+  }
+
+  @objc func onPinch(_ sender: UIPinchGestureRecognizer) {
+    if sender.state == .began {
+      pinchStartLower = xAxisView.lowerBound
+      pinchStartUpper = xAxisView.upperBound
+    }
+
+    if sender.state != .changed {
+      return
+    }
+
+    let rangeLength = CGFloat(pinchStartUpper - pinchStartLower)
+    let dx = Int(round((rangeLength * sender.scale - rangeLength) / 2))
+    let lower = max(pinchStartLower + dx, 0)
+    let upper = min(pinchStartUpper - dx, chartData.labels.count - 1)
+
+    if upper - lower < chartData.labels.count / 10 {
+      return
+    }
+    
+    chartPreviewView.setX(min: lower, max: upper)
+    xAxisView.setBounds(lower: lower, upper: upper)
+    updateCharts(animationStyle: .none)
+    chartInfoView.update()
+
+  }
+
+  @objc func onPan(_ sender: UIPanGestureRecognizer) {
+    let t = sender.translation(in: chartsContainerView)
+    if sender.state == .began {
+      panStartPoint = xAxisView.lowerBound
+    }
+
+    if sender.state != .changed {
+      return
+    }
+
+    let dx = Int(round(t.x / chartsContainerView.bounds.width * CGFloat(xAxisView.upperBound - xAxisView.lowerBound)))
+    let lower = panStartPoint - dx
+    let upper = lower + xAxisView.upperBound - xAxisView.lowerBound
+    if lower < 0 || upper > chartData.labels.count - 1 {
+      return
+    }
+    
+    chartPreviewView.setX(min: lower, max: upper)
+    xAxisView.setBounds(lower: lower, upper: upper)
+    updateCharts(animationStyle: .none)
+    chartInfoView.update()
   }
 
   func updateYScaled(animationStyle: ChartAnimation = .none) {
@@ -251,12 +302,16 @@ class ChartView: UIView {
 extension ChartView: ChartPreviewViewDelegate {
   func chartPreviewView(_ view: ChartPreviewView, didChangeMinX minX: Int, maxX: Int) {
     xAxisView.setBounds(lower: minX, upper: maxX)
-    updateCharts(animationStyle: .interactive)
+    updateCharts(animationStyle: .none)
     chartInfoView.update()
   }
 }
 
 extension ChartView: ChartInfoViewDelegate {
+  func chartInfoView(_ view: ChartInfoView, didCaptureInfoView captured: Bool) {
+    panGR.isEnabled = !captured
+  }
+
   func chartInfoView(_ view: ChartInfoView, infoAtPointX pointX: CGFloat) -> (String, [ChartLineInfo])? {
     let p = convert(CGPoint(x: pointX, y: 0), from: view)
     let x = (p.x / bounds.width) * CGFloat(xAxisView.upperBound - xAxisView.lowerBound) + CGFloat(xAxisView.lowerBound)

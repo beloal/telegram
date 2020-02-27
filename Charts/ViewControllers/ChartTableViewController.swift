@@ -108,7 +108,6 @@ class ChartTableViewController: UITableViewController {
       $0.chartView.gridLineColor = theme.gridLine
       $0.chartView.headerTextColor = theme.black
       $0.chartView.bgColor = theme.background
-      $0.chartView.maskColor = theme.barMask
     }
     self.navigationController?.navigationBar.barStyle = theme.barStyle
     themeBarItem.title = Theme.isNightTheme ? "Day Mode" : "Night Mode"

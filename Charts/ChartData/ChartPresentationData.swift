@@ -183,6 +183,11 @@ extension IChartPathBuilder {
       if i == 0 {
         path.move(to: CGPoint(x: x, y: y))
       } else {
+//        let px = CGFloat(i - 1)
+//        let py = CGFloat(values[i - 1] - line.minY)
+//        path.addCurve(to: CGPoint(x: x, y: y),
+//                      controlPoint1: CGPoint(x: px + (x - px) / 2, y: py),
+//                      controlPoint2: CGPoint(x: px + (x - px) / 2, y: y))
         path.addLine(to: CGPoint(x: x, y: y))
       }
     }

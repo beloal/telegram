@@ -15,6 +15,8 @@ fileprivate class ChartYAxisInnerView: UIView {
 //  var labels: [UILabel] = []
   let lowerLabel: UILabel
   let upperLabel: UILabel
+  let lowerLabelBackground = UIView()
+  let upperLabelBackground = UIView()
   var alignment: ChartYAxisViewAlignment = .left
   var textColor: UIColor?
   var gridColor: UIColor = UIColor(white: 0, alpha: 0.3) {
@@ -35,14 +37,6 @@ fileprivate class ChartYAxisInnerView: UIView {
 
   private var path: UIBezierPath?
 
-  override var frame: CGRect {
-    didSet {
-      if upperBound > 0 && lowerBound > 0 {
-        updateGrid()
-      }
-    }
-  }
-
   var shapeLayer: CAShapeLayer {
     return layer as! CAShapeLayer
   }
@@ -55,15 +49,31 @@ fileprivate class ChartYAxisInnerView: UIView {
 
     lowerLabel.translatesAutoresizingMaskIntoConstraints = false
     upperLabel.translatesAutoresizingMaskIntoConstraints = false
+    lowerLabelBackground.translatesAutoresizingMaskIntoConstraints = false
+    upperLabelBackground.translatesAutoresizingMaskIntoConstraints = false
+    lowerLabelBackground.backgroundColor = UIColor(white: 1, alpha: 0.8)
+    upperLabelBackground.backgroundColor = UIColor(white: 1, alpha: 0.8)
 
-    addSubview(lowerLabel)
-    addSubview(upperLabel)
+    lowerLabelBackground.addSubview(lowerLabel)
+    upperLabelBackground.addSubview(upperLabel)
+    addSubview(lowerLabelBackground)
+    addSubview(upperLabelBackground)
 
     NSLayoutConstraint.activate([
-      lowerLabel.topAnchor.constraint(equalTo: topAnchor),
-      lowerLabel.rightAnchor.constraint(equalTo: rightAnchor),
-      upperLabel.bottomAnchor.constraint(equalTo: bottomAnchor),
-      upperLabel.rightAnchor.constraint(equalTo: rightAnchor)
+      lowerLabel.leftAnchor.constraint(equalTo: lowerLabelBackground.leftAnchor, constant: 5),
+      lowerLabel.topAnchor.constraint(equalTo: lowerLabelBackground.topAnchor),
+      lowerLabel.rightAnchor.constraint(equalTo: lowerLabelBackground.rightAnchor, constant: -5),
+      lowerLabel.bottomAnchor.constraint(equalTo: lowerLabelBackground.bottomAnchor),
+
+      upperLabel.leftAnchor.constraint(equalTo: upperLabelBackground.leftAnchor, constant: 5),
+      upperLabel.topAnchor.constraint(equalTo: upperLabelBackground.topAnchor),
+      upperLabel.rightAnchor.constraint(equalTo: upperLabelBackground.rightAnchor, constant: -5),
+      upperLabel.bottomAnchor.constraint(equalTo: upperLabelBackground.bottomAnchor),
+
+      lowerLabelBackground.topAnchor.constraint(equalTo: topAnchor, constant: 5),
+      lowerLabelBackground.rightAnchor.constraint(equalTo: rightAnchor, constant: -5),
+      upperLabelBackground.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -5),
+      upperLabelBackground.rightAnchor.constraint(equalTo: rightAnchor, constant:  -5)
     ])
 
     shapeLayer.fillColor = UIColor.clear.cgColor
@@ -74,6 +84,17 @@ fileprivate class ChartYAxisInnerView: UIView {
 
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
+  }
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+
+    if upperBound > 0 && lowerBound > 0 {
+      updateGrid()
+    }
+
+    lowerLabelBackground.layer.cornerRadius = lowerLabelBackground.frame.height / 2
+    upperLabelBackground.layer.cornerRadius = upperLabelBackground.frame.height / 2
   }
 
   static func makeLabel() -> UILabel {
